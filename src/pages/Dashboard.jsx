@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import useSWR from 'swr'; // Cài đặt: npm install swr
+import { RefreshCw } from 'lucide-react'; // Cài đặt: npm install lucide-react
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
 
-// Component tùy chỉnh Tooltip cho biểu đồ đẹp hơn
+// Component tùy chỉnh Tooltip giữ nguyên
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -19,20 +21,19 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // --- THAY THẾ useEffect BẰNG useSWR ĐỂ QUẢN LÝ REFRESH ---
+  const { data, error, mutate, isValidating } = useSWR('gold-prices', fetchGoldPrices, {
+    revalidateOnFocus: false, // Không tự load lại khi chuyển tab
+    revalidateIfStale: false,  // Ưu tiên dùng cache cũ (hiển thị tức thì)
+    dedupingInterval: 5000,    // Chống nhấn nút liên tục trong 5s
+  });
 
-  useEffect(() => {
-    const getData = async () => {
-      const res = await fetchGoldPrices();
-      console.log("Dữ liệu nhận được từ API:", res);
-      if (res) setData(res);
-      setLoading(false);
-    };
-    getData();
-  }, []);
+  const handleRefresh = async () => {
+    await mutate(); // Ép buộc gọi hàm fetchGoldPrices() để lấy data mới nhất
+  };
 
-  if (loading) {
+  // Trạng thái Loading ban đầu (chỉ hiện khi chưa có dữ liệu trong cache)
+  if (!data && !error) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
@@ -40,44 +41,35 @@ export default function Dashboard() {
       </div>
     );
   }
+  // -------------------------------------------------------
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      
+      {/* NÚT REFRESH (Chỉ thêm phần này vào trên grid thẻ giá) */}
+      <div className="flex justify-end px-2">
+        <button
+          onClick={handleRefresh}
+          disabled={isValidating}
+          className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold transition-all active:scale-95 text-[11px] uppercase tracking-wider
+            ${isValidating 
+              ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
+              : 'bg-orange-50 text-orange-600 hover:bg-orange-100 shadow-sm shadow-orange-100'
+            }`}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? 'animate-spin' : ''}`} />
+          {isValidating ? 'Đang cập nhật...' : 'Làm mới giá'}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 3. DOJI Sài Gòn */}
-        <PriceCard 
-          title="DOJI Sài Gòn" 
-          price={data?.dojiSg} 
-          unit="đ" 
-          change="Live từ 24h.com.vn" 
-        />
-        
-        {/* 1. SJC */}
-        <PriceCard 
-          title="SJC Toàn Quốc" 
-          price={data?.sjc} 
-          unit="đ" 
-          change="Live từ 24h.com.vn" 
-        />
-
-        {/* 2. DOJI HN */}
-        <PriceCard 
-          title="DOJI Hà Nội" 
-          price={data?.dojiHn} 
-          unit="đ" 
-          change="Live từ 24h.com.vn" 
-        />
-
-        {/* 4. Bảo Tín Minh Châu (BTMH) */}
-        <PriceCard 
-          title="Bảo Tín Minh Châu" 
-          price={data?.btmh} 
-          unit="đ" 
-          change="Live từ 24h.com.vn" 
-        />
+        <PriceCard title="DOJI Sài Gòn" price={data?.dojiSg} unit="đ" change="Live từ 24h.com.vn" />
+        <PriceCard title="SJC Toàn Quốc" price={data?.sjc} unit="đ" change="Live từ 24h.com.vn" />
+        <PriceCard title="DOJI Hà Nội" price={data?.dojiHn} unit="đ" change="Live từ 24h.com.vn" />
+        <PriceCard title="Bảo Tín Minh Châu" price={data?.btmh} unit="đ" change="Live từ 24h.com.vn" />
       </div>
       
-      {/* PHẦN BIỂU ĐỒ NÂNG CẤP */}
+      {/* PHẦN BIỂU ĐỒ GIỮ NGUYÊN 100% LOGIC */}
       <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm overflow-hidden relative">
         <div className="flex justify-between items-center mb-8 relative z-10">
           <div className="flex items-center gap-2">
@@ -100,40 +92,33 @@ export default function Dashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="date" 
-                fontSize={9} 
-                tickLine={false} 
-                axisLine={false} 
-                tick={{fill: '#94a3b8', fontWeight: 600}} 
-                dy={15} 
-                minTickGap={20} // Tránh các ngày bị dính chữ vào nhau
-              />
-              {/* Căn chỉnh Domain thông minh hơn để chart có độ nhấp nhô đẹp */}
+              <XAxis dataKey="date" fontSize={9} tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontWeight: 600}} dy={15} minTickGap={20} />
               <YAxis hide domain={['dataMin - 0.5', 'dataMax + 0.5']} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#fdba74', strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Area 
                 type="monotone" 
                 dataKey="price" 
                 stroke="#ea580c" 
-                strokeWidth={4} // Nét đậm hơn
+                strokeWidth={4} 
                 fillOpacity={1} 
                 fill="url(#colorPrice)" 
-                activeDot={{ r: 6, fill: "#ea580c", stroke: "#fff", strokeWidth: 3, shadow: "0px 0px 10px rgba(234, 88, 12, 0.5)" }} // Dot đẹp khi hover
+                activeDot={{ r: 6, fill: "#ea580c", stroke: "#fff", strokeWidth: 3, shadow: "0px 0px 10px rgba(234, 88, 12, 0.5)" }} 
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
       
-      {/* Footer giữ nguyên */}
+      {/* Footer giữ nguyên - Đèn tín hiệu sẽ đổi màu khi đang load ngầm */}
       <div className="flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 ${isValidating ? '' : 'animate-ping'}`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${isValidating ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
           </span>
-          <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Live Market Data</span>
+          <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">
+            {isValidating ? 'Đang đồng bộ...' : 'Live Market Data'}
+          </span>
         </div>
         <div className="text-[10px] text-zinc-600 italic font-mono">
           Cập nhật: {data?.updatedAt}
