@@ -26,7 +26,7 @@ export default function PriceCard({ title, price, unit, change }) {
     const current = parseFloat(currentStr.replace(/,/g, '')) || 0; 
     const diff = diffNum || 0; // vd: 5000 hoặc -5000
     
-    // Giá hôm qua = Hiện tại - Biến động
+
     const oldPrice = current - diff;
     return oldPrice.toLocaleString('en-US'); // Format lại: 161,000
   };
