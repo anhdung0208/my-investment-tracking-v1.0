@@ -1,49 +1,39 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 export default async function handler(req, res) {
   try {
+    // Lấy Key từ Biến môi trường Vercel (đã cài ở bước trước)
     const apiKey = process.env.VITE_GOLD_API_KEY;
-    
-    if (!apiKey) {
-      return res.status(500).json({ error: "Chưa cấu hình VITE_GOLD_API_KEY trên Vercel" });
-    }
 
-    // 1. Lấy giá vàng thế giới
-    const worldRes = await axios.get('https://www.goldapi.io/api/XAU/USD', {
-      headers: { 'x-access-token': apiKey },
-      timeout: 5000
-    });
+    const config = {
+      method: 'get',
+      url: 'https://www.goldapi.io/api/XAU/USD',
+      headers: { 
+        'x-access-token': apiKey, // Dùng biến môi trường cho bảo mật
+        'Content-Type': 'application/json'
+      }
+    };
 
-    // 2. Lấy giá vàng SJC từ 24h (Dùng try-catch để an toàn)
-    let sjcData = { buy: 80.5, sell: 82.5 };
-    try {
-      const response24h = await axios.get('https://www.24h.com.vn/gia-vang-hom-nay-c425.html', { timeout: 3000 });
-      const $ = cheerio.load(response24h.data);
-      const buyText = $('.table-gia-vang tr').eq(1).find('td').eq(1).text().trim();
-      const sellText = $('.table-gia-vang tr').eq(1).find('td').eq(2).text().trim();
-      
-      if (buyText) sjcData.buy = parseFloat(buyText.replace(',', '.'));
-      if (sellText) sjcData.sell = parseFloat(sellText.replace(',', '.'));
-    } catch (e) {
-      console.log("Không cào được 24h, dùng giá dự phòng SJC");
-    }
+    // Gọi API bằng Axios (Tương đương với fetch ở code mẫu)
+    const response = await axios(config);
 
-    // 3. Trả về kết quả JSON
+    // Trả kết quả về cho Frontend React của Dũng
     return res.status(200).json({
-      world: { 
-        price: worldRes.data.price || 2175, 
-        trend: worldRes.data.chp > 0 ? "up" : "down", 
-        change: `${worldRes.data.chp?.toFixed(2) || 0}%` 
+      world: {
+        price: response.data.price,
+        trend: response.data.chp > 0 ? 'up' : 'down',
+        change: `${response.data.chp?.toFixed(2)}%`,
+        symbol: response.data.symbol
       },
-      sjc: sjcData,
       updatedAt: new Date().toLocaleTimeString('vi-VN')
     });
 
   } catch (error) {
+    // Nếu API Key sai hoặc hết hạn, nó sẽ báo lỗi ở đây
+    console.error('Lỗi GoldAPI:', error.response?.data || error.message);
     return res.status(500).json({ 
-      error: "Lỗi kết nối GoldAPI", 
-      message: error.message 
+      error: "Lỗi gọi GoldAPI", 
+      message: error.response?.data?.message || error.message 
     });
   }
 }
