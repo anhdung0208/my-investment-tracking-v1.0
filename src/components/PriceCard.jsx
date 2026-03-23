@@ -29,7 +29,7 @@ export default function PriceCard({ title, price, unit, trend, change }) {
 
             {/* Cột Bán ra */}
             <div className="flex flex-col space-y-0.5 border-l border-orange-50 pl-3">
-              <p className="text-orange-500 text-[8px] uppercase font-bold">Bán ra</p>
+              <p className="text-orange-500 text-[8px] uppercase font-bold">Bán ra.</p>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-xl font-black text-orange-600 tracking-tighter">
                   {price.sell}
