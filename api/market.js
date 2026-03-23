@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=30');
+  //res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=30');
   const apiKey = process.env.VITE_GOLD_API_KEY;
 
   try {
