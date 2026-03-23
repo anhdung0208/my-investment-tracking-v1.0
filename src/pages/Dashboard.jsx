@@ -115,17 +115,40 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2">
-        <WorldGoldChart />
-      </div>
 
-      <div className="lg:col-span-2">
-         <StockWatchlistWidget />
-      </div>
+<div className="flex flex-col gap-8 pb-10">
+  
+  {/* Hàng 1: Phân tích kỹ thuật Vàng Thế giới (TradingView) */}
+  <div className="w-full">
+    <div className="flex items-center gap-2 mb-4 px-2">
+      <div className="w-1.5 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Biểu đồ Vàng Thế giới (XAU/USD)</h3>
+    </div>
+    <WorldGoldChart />
+  </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <ForexRatesWidget />
-      </div>
+  {/* Hàng 2: Danh mục Cổ phiếu (HPG, FPT...) */}
+  <div className="w-full">
+    <div className="flex items-center gap-2 mb-4 px-2">
+      <div className="w-1.5 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full"></div>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Theo dõi Cổ phiếu Việt Nam</h3>
+    </div>
+    <StockWatchlistWidget />
+  </div>
+
+  {/* Hàng 3: Tỷ giá Ngoại tệ (USD, EUR, JPY...) */}
+  <div className="w-full">
+    <div className="flex items-center gap-2 mb-4 px-2">
+      <div className="w-1.5 h-5 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full"></div>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Tỷ giá ngoại tệ trực tuyến</h3>
+    </div>
+    <ForexRatesWidget />
+  </div>
+
+  {/* Dưới này Dũng đặt tiếp cái Biểu đồ 30 ngày (Recharts) và Footer là đẹp bài */}
+</div>
+
+      
     </div>
 
      
