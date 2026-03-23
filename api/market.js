@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const [worldRes, domesticRes] = await Promise.allSettled([
-      axios.get('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': apiKey }, timeout: 6000 }),
+      axios.get('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': apiKey }, timeout: 5000 }),
       axios.get('https://www.24h.com.vn/gia-vang-hom-nay-c425.html', { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
           "Referer": "https://www.google.com/" }, timeout: 8000 })
@@ -116,25 +116,9 @@ export default async function handler(req, res) {
     // ==========================================
     // 3. THẾ GIỚI (Chạy độc lập với 24h)
     // ==========================================
-    // ==========================================
-    // 3. XỬ LÝ VÀNG THẾ GIỚI (World Gold)
-    // ==========================================
-    if (worldRes.status === 'fulfilled' && worldRes.value) {
-      // Axios trả về dữ liệu trong object .data
-      const d = worldRes.value.data; 
-      
-      if (d && d.price) {
-        responseData.world = { 
-          price: d.price, 
-          trend: d.chp > 0 ? 'up' : 'down', 
-          change: d.chp ? `${d.chp.toFixed(2)}%` : '0%' 
-        };
-        console.log("✅ Đã lấy được giá TG:", d.price);
-      } else {
-        console.log("⚠️ API Thế giới trả về format lạ:", d);
-      }
-    } else if (worldRes.status === 'rejected') {
-      console.error("❌ GoldAPI thất bại:", worldRes.reason?.message);
+    if (worldRes.status === 'fulfilled') {
+      const d = worldRes.value.data;
+      responseData.world = { price: d.price, trend: d.chp > 0 ? 'up' : 'down', change: `${d.chp?.toFixed(2)}%` };
     }
 
     return res.status(200).json(responseData);
