@@ -1,4 +1,6 @@
 // components/Header.jsx
+import { TrendingUp, Wallet } from 'lucide-react';
+
 export default function Header() {
   return (
     <nav className="flex justify-between items-center mb-8 pb-6 border-b border-orange-100">
@@ -8,7 +10,7 @@ export default function Header() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">Dũng Investment</h1>
-          <p className="text-[10px] text-orange-500 font-bold tracking-[0.2em] uppercase">Market Realtime</p>
+          <p className="text-[10px] text-orange-500 font-bold tracking-[0.2em] uppercase">Market is Realtime</p>
         </div>
       </div>
       <div className="flex items-center gap-4">
