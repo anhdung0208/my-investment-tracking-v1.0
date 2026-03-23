@@ -1,8 +1,9 @@
 ﻿{
+  "version": 2,
   "rewrites": [
     {
-      "source": "/api/market",
-      "destination": "/api/market.js"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }
