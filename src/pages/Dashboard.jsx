@@ -1,20 +1,41 @@
-import React from 'react';
-import useSWR from 'swr';
-import { RefreshCw } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import React from "react";
+import useSWR from "swr";
+import { RefreshCw } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+
 import PriceCard from "../components/PriceCard";
-import { fetchGoldPrices } from '../services/gold';
+import { fetchGoldPrices } from "../services/gold";
 import WorldGoldChart from "../components/WorldGoldChart";
 import ForexRatesWidget from "../components/ForexRatesWidget";
 import StockWatchlistWidget from "../components/StockWatchlistWidget";
 
+// =======================
+// TOOLTIP (SAFE)
+// =======================
 const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
+  if (active && payload?.length) {
+    const value = payload?.[0]?.value;
+
     return (
-      <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-orange-50">
-        <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">{label}</p>
+      <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow border border-orange-50">
+        <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">
+          {label}
+        </p>
         <p className="text-orange-600 font-black text-lg">
-          {payload[0].value.toFixed(2)} <span className="text-[10px] text-orange-400 font-semibold">tr/lượng</span>
+          {typeof value === "number"
+            ? value.toLocaleString("en-US")
+            : "--"}{" "}
+          <span className="text-[10px] text-orange-400 font-semibold">
+            đ
+          </span>
         </p>
       </div>
     );
@@ -23,161 +44,156 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const { data, error, mutate, isValidating } = useSWR('gold-prices', fetchGoldPrices, {
-    revalidateOnFocus: false,
-    revalidateIfStale: false,
-    dedupingInterval: 5000,
-  });
+  const { data, error, mutate, isValidating } = useSWR(
+    "gold-prices",
+    fetchGoldPrices,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10000,
+    }
+  );
 
   const handleRefresh = async () => {
     await mutate();
   };
 
+  // =======================
+  // LOADING
+  // =======================
   if (!data && !error) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-        <span className="ml-3 text-zinc-400 font-medium">Đang cào dữ liệu 24h.com.vn...</span>
+        <span className="ml-3 text-zinc-400 font-medium">
+          Đang tải dữ liệu...
+        </span>
       </div>
     );
   }
 
-  console.log('Fetched Data:', data);
+  // =======================
+  // GOLD LIST
+  // =======================
+  const goldList = [
+    { key: "dojiSg", title: "DOJI Sài Gòn" },
+    { key: "sjc", title: "SJC Toàn Quốc" },
+    { key: "dojiHn", title: "DOJI Hà Nội" },
+    { key: "btmh", title: "Bảo Tín Minh Châu" },
+  ];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20">
-      
-      {/* HEADER & REFRESH */}
+      {/* HEADER */}
       <div className="flex justify-between items-center px-2">
-        <h2 className="text-xl font-black text-zinc-800 uppercase tracking-tighter">Bảng tin thị trường</h2>
+        <h2 className="text-xl font-black text-zinc-800 uppercase tracking-tighter">
+          Bảng tin thị trường
+        </h2>
+
         <button
           onClick={handleRefresh}
           disabled={isValidating}
-          className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold transition-all active:scale-95 text-[11px] uppercase tracking-wider
-            ${isValidating 
-              ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
-              : 'bg-orange-50 text-orange-600 hover:bg-orange-100 shadow-sm'
-            }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold transition-all text-[11px]
+          ${
+            isValidating
+              ? "bg-zinc-100 text-zinc-400"
+              : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+          }`}
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? 'animate-spin' : ''}`} />
-          {isValidating ? 'Đang cập nhật...' : 'Làm mới giá'}
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${
+              isValidating ? "animate-spin" : ""
+            }`}
+          />
+          {isValidating ? "Đang cập nhật..." : "Làm mới"}
         </button>
       </div>
 
-      {/* KHỐI 1: 4 THẺ GIÁ VÀNG TRONG NƯỚC */}
+      {/* =======================
+          4 THẺ GIÁ
+      ======================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PriceCard
-  title="DOJI Sài Gòn"
-  buy={data?.dojiSg?.buy}
-  sell={data?.dojiSg?.sell}
-  diff={data?.dojiSg?.diff}
-  unit="đ"
-/>
-
-<PriceCard
-  title="SJC Toàn Quốc"
-  buy={data?.sjc?.buy}
-  sell={data?.sjc?.sell}
-  diff={data?.sjc?.diff}
-  unit="đ"
-/>
-
-<PriceCard
-  title="DOJI Hà Nội"
-  buy={data?.dojiHn?.buy}
-  sell={data?.dojiHn?.sell}
-  diff={data?.dojiHn?.diff}
-  unit="đ"
-/>
-
-<PriceCard
-  title="Bảo Tín Minh Châu"
-  buy={data?.btmh?.buy}
-  sell={data?.btmh?.sell}
-  diff={data?.btmh?.diff}
-  unit="đ"
-/>
+        {goldList.map((item) => (
+          <PriceCard
+            key={item.key}
+            title={item.title}
+            price={data?.[item.key]}
+            unit="đ"
+          />
+        ))}
       </div>
 
-      {/* KHỐI 2: BIỂU ĐỒ 30 NGÀY (RECHARTS) */}
-      <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm overflow-hidden relative">
-        <div className="flex justify-between items-center mb-8 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
-            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Lịch sử SJC 30 ngày</h3>
-          </div>
-          <span className="text-[9px] font-bold text-orange-600 bg-orange-50/80 px-3 py-1.5 rounded-full border border-orange-100/50 backdrop-blur-sm">
-            Nguồn: 24h.com.vn
+      {/* =======================
+          CHART 30 NGÀY
+      ======================= */}
+      <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-sm font-black text-zinc-800 uppercase">
+            Lịch sử SJC 30 ngày
+          </h3>
+          <span className="text-[9px] text-orange-600 font-bold">
+            24h.com.vn
           </span>
         </div>
-        <div className="h-[280px] w-full -mx-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data?.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+
+        <div className="h-[280px] w-full">
+          <ResponsiveContainer>
+            <AreaChart data={data?.chartData || []}>
               <defs>
                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f97316" stopOpacity={0.4}/>
-                  <stop offset="75%" stopColor="#f97316" stopOpacity={0.05}/>
-                  <stop offset="100%" stopColor="#f97316" stopOpacity={0}/>
+                  <stop offset="0%" stopColor="#f97316" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="date" fontSize={9} tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontWeight: 600}} dy={15} minTickGap={20} />
-              <YAxis hide domain={['dataMin - 0.5', 'dataMax + 0.5']} />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#fdba74', strokeWidth: 1 }} />
-              <Area type="monotone" dataKey="price" stroke="#ea580c" strokeWidth={4} fill="url(#colorPrice)" activeDot={{ r: 6, fill: "#ea580c", stroke: "#fff", strokeWidth: 3 }} />
+
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
+              <XAxis
+                dataKey="date"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+              />
+
+              <YAxis
+                hide
+                domain={["dataMin - 500", "dataMax + 500"]}
+              />
+
+              <Tooltip content={<CustomTooltip />} />
+
+              <Area
+                type="monotone"
+                dataKey="price"
+                stroke="#ea580c"
+                strokeWidth={3}
+                fill="url(#colorPrice)"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* 3 TẦNG WIDGET TRADINGVIEW THEO THỨ TỰ */}
+      {/* =======================
+          WIDGETS
+      ======================= */}
       <div className="flex flex-col gap-10">
-        
-        {/* TẦNG 1: BIỂU ĐỒ VÀNG THẾ GIỚI */}
-        <section className="w-full">
-          <div className="flex items-center gap-2 mb-4 px-2">
-            <div className="w-1.5 h-5 bg-orange-500 rounded-full"></div>
-            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">1. Phân tích Vàng Thế giới (XAU/USD)</h3>
-          </div>
-          <WorldGoldChart /> 
-        </section>
-
-        {/* TẦNG 2: CỔ PHIẾU */}
-        <section className="w-full">
-          <div className="flex items-center gap-2 mb-4 px-2">
-            <div className="w-1.5 h-5 bg-blue-500 rounded-full"></div>
-            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">2. Danh mục Cổ phiếu (FPT, HPG...)</h3>
-          </div>
-          <StockWatchlistWidget />
-        </section>
-
-        {/* TẦNG 3: NGOẠI TỆ */}
-        <section className="w-full">
-          <div className="flex items-center gap-2 mb-4 px-2">
-            <div className="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
-            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">3. Tỷ giá ngoại tệ trực tuyến</h3>
-          </div>
-          <ForexRatesWidget />
-        </section>
-
+        <WorldGoldChart />
+        <StockWatchlistWidget />
+        <ForexRatesWidget />
       </div>
 
-      {/* FOOTER CỐ ĐỊNH DƯỚI CÙNG */}
-      <div className="flex justify-between items-center px-2 pt-6 border-t border-zinc-100">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 ${isValidating ? '' : 'animate-ping'}`}></span>
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${isValidating ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
-          </span>
-          <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">
-            {isValidating ? 'Đang đồng bộ...' : 'Live Market Data'}
-          </span>
-        </div>
-        <div className="text-[10px] text-zinc-600 italic font-mono">
-          Cập nhật: {data?.updatedAt}
-        </div>
-      </div>
+      {/* =======================
+          FOOTER
+      ======================= */}
+      <div className="flex justify-between items-center px-2 pt-6 border-t">
+        <span className="text-[10px] text-zinc-500 uppercase font-bold">
+          {isValidating ? "Đang đồng bộ..." : "Live Market Data"}
+        </span>
 
+        <span className="text-[10px] text-zinc-600 font-mono">
+          {data?.updatedAt || "--"}
+        </span>
+      </div>
     </div>
   );
 }
