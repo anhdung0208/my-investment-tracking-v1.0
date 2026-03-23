@@ -1,17 +1,10 @@
 export const fetchGoldPrices = async () => {
   try {
     const response = await fetch('/api/market');
-    
-    if (!response.ok) throw new Error("API not available");
-
+    if (!response.ok) throw new Error('Network response was not ok');
     return await response.json();
   } catch (error) {
-    console.warn("Đang dùng dữ liệu dự phòng (Chế độ Offline/Local)");
-    return {
-      world: { price: 2170.5, unit: "USD/oz", trend: "up", change: "Live" },
-      sjc: { buy: 80.5, sell: 82.5, unit: "tr/lượng" },
-      usd: { rate: 25400, unit: "VND" },
-      updatedAt: "Dữ liệu Offline haha"
-    };
+    console.error("Lỗi lấy dữ liệu:", error);
+    return null;
   }
 };
