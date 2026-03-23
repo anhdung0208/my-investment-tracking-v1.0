@@ -45,6 +45,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+
+      console.log("Dữ liệu thị trường:", data); // Debug dữ liệu nhận được từ API
       
       {/* NÚT REFRESH (Chỉ thêm phần này vào trên grid thẻ giá) */}
       <div className="flex justify-end px-2">
