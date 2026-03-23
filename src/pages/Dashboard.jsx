@@ -20,7 +20,7 @@ export default function Dashboard() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-        <span className="ml-3 text-zinc-400 font-medium">Đang cào dữ liệu 24h...</span>
+        <span className="ml-3 text-zinc-400 font-medium">Đang cào dữ liệu Giavang.net...</span>
       </div>
     );
   }
@@ -28,36 +28,40 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 1. SJC */}
         <PriceCard 
-          title="Vàng Thế Giới" 
-          price={data?.world?.price} 
-          unit="USD/oz" 
-          trend={data?.world?.trend} 
-          change={data?.world?.change} 
-        />
-        <PriceCard 
-          title="SJC TP.HCM" 
+          title="SJC Toàn Quốc" 
           price={data?.sjc} 
-          unit="tr/lượng" 
-          trend={parseFloat(data?.sjc?.sell) >= parseFloat(data?.sjc?.oldSell) ? "up" : "down"} 
-          change="So với hôm qua" 
+          unit="đ" 
+          change="Live từ Giavang.net" 
         />
+
+        {/* 2. DOJI Hà Nội */}
         <PriceCard 
-          title="PNJ TP.HCM" 
-          price={data?.pnj} 
-          unit="tr/lượng" 
-          trend={parseFloat(data?.pnj?.sell) >= parseFloat(data?.pnj?.oldSell) ? "up" : "down"} 
-          change="So với hôm qua" 
+          title="DOJI Hà Nội" 
+          price={data?.dojiHn} 
+          unit="đ" 
+          change="Live từ Giavang.net" 
         />
+
+        {/* 3. DOJI Sài Gòn */}
         <PriceCard 
-          title="DOJI SG" 
-          price={data?.doji} 
-          unit="tr/lượng" 
-          trend={parseFloat(data?.doji?.sell) >= parseFloat(data?.doji?.oldSell) ? "up" : "down"} 
-          change="So với hôm qua" 
+          title="DOJI Sài Gòn" 
+          price={data?.dojiSg} 
+          unit="đ" 
+          change="Live từ Giavang.net" 
+        />
+
+        {/* 4. Bảo Tín Minh Châu (BTMH) */}
+        <PriceCard 
+          title="Bảo Tín Minh Châu" 
+          price={data?.btmh} 
+          unit="đ" 
+          change="Live từ Giavang.net" 
         />
       </div>
-
+      
+      {/* Phần Biểu đồ giữ nguyên */}
       <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
@@ -65,7 +69,7 @@ export default function Dashboard() {
             <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Biến động 30 ngày</h3>
           </div>
           <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-            Dữ liệu: 24h.com.vn
+            Dữ liệu: giavang.net
           </span>
         </div>
         
@@ -88,6 +92,7 @@ export default function Dashboard() {
         </div>
       </div>
       
+      {/* Footer giữ nguyên */}
       <div className="flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
