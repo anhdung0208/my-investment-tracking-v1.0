@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
 import WorldGoldChart from "../components/WorldGoldChart";
+import ForexRatesWidget from "../components/ForexRatesWidget";
 
 // Component tùy chỉnh Tooltip giữ nguyên
 const CustomTooltip = ({ active, payload, label }) => {
@@ -112,9 +113,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mb-4"> {/* Thêm margin bottom nhẹ */}
-       <WorldGoldChart />
-     </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2">
+        <WorldGoldChart />
+      </div>
+      <div className="lg:col-span-1">
+        <ForexRatesWidget />
+      </div>
+    </div>
+
+     
       
       {/* Footer giữ nguyên - Đèn tín hiệu sẽ đổi màu khi đang load ngầm */}
       <div className="flex justify-between items-center px-2">
