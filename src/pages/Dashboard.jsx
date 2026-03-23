@@ -6,6 +6,7 @@ import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
 import WorldGoldChart from "../components/WorldGoldChart";
 import ForexRatesWidget from "../components/ForexRatesWidget";
+import StockWatchlistWidget from "../components/StockWatchlistWidget";
 
 // Component tùy chỉnh Tooltip giữ nguyên
 const CustomTooltip = ({ active, payload, label }) => {
@@ -117,7 +118,8 @@ export default function Dashboard() {
       <div className="lg:col-span-2">
         <WorldGoldChart />
       </div>
-      <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <StockWatchlistWidget />
         <ForexRatesWidget />
       </div>
     </div>
