@@ -116,9 +116,25 @@ export default async function handler(req, res) {
     // ==========================================
     // 3. THẾ GIỚI (Chạy độc lập với 24h)
     // ==========================================
-    if (worldRes.status === 'fulfilled') {
-      const d = worldRes.value.data;
-      responseData.world = { price: d.price, trend: d.chp > 0 ? 'up' : 'down', change: `${d.chp?.toFixed(2)}%` };
+    // ==========================================
+    // 3. XỬ LÝ VÀNG THẾ GIỚI (World Gold)
+    // ==========================================
+    if (worldRes.status === 'fulfilled' && worldRes.value) {
+      // Axios trả về dữ liệu trong object .data
+      const d = worldRes.value.data; 
+      
+      if (d && d.price) {
+        responseData.world = { 
+          price: d.price, 
+          trend: d.chp > 0 ? 'up' : 'down', 
+          change: d.chp ? `${d.chp.toFixed(2)}%` : '0%' 
+        };
+        console.log("✅ Đã lấy được giá TG:", d.price);
+      } else {
+        console.log("⚠️ API Thế giới trả về format lạ:", d);
+      }
+    } else if (worldRes.status === 'rejected') {
+      console.error("❌ GoldAPI thất bại:", worldRes.reason?.message);
     }
 
     return res.status(200).json(responseData);
