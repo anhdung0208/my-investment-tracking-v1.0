@@ -13,12 +13,12 @@ export default function StockWatchlistWidget() {
 
     script.innerHTML = JSON.stringify({
       symbols: [
-        ["FPT"],
-        ["HPG"],
-        ["VNM"],
-        ["VCB"],
-        ["MWG"]
-      ],
+  { s: "FPT", d: "FPT" },
+  { s: "HPG", d: "HPG" },
+  { s: "VNM", d: "VNM" },
+  { s: "VCB", d: "VCB" },
+  { s: "MWG", d: "MWG" }
+],
       chartOnly: false,
       width: "100%",
       height: 400,
