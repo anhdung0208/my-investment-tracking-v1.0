@@ -26,8 +26,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Vàng Thế Giới - Lấy từ GoldAPI */}
+      {/* Thay đổi grid-cols để hiển thị 4 cột trên màn hình lớn */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* 1. Vàng Thế Giới */}
         <PriceCard 
           title="Vàng Thế Giới" 
           price={data?.world?.price} 
@@ -36,22 +38,31 @@ export default function Dashboard() {
           change={data?.world?.change} 
         />
 
-        {/* Vàng SJC - Lấy từ dữ liệu cào 24h.com.vn */}
+        {/* 2. Vàng SJC - Lấy dữ liệu cào */}
         <PriceCard 
-          title="Vàng SJC (Bán ra)" 
+          title="SJC TP.HCM" 
           price={data?.sjc?.sell} 
           unit="tr/lượng" 
-          trend="up" 
-          change="SJC HCM (24h)" 
+          trend={data?.sjc?.sell > data?.sjc?.buy ? "up" : "down"} 
+          change={`Mua: ${data?.sjc?.buy}`} 
         />
 
-        {/* Tỷ giá hoặc Vàng SJC (Mua vào) */}
+        {/* 3. Vàng PNJ - Lấy dữ liệu cào */}
         <PriceCard 
-          title="Vàng SJC (Mua vào)" 
-          price={data?.sjc?.buy} 
+          title="PNJ TP.HCM" 
+          price={data?.pnj?.sell} 
           unit="tr/lượng" 
-          trend="down" 
-          change="Cập nhật trực tiếp" 
+          trend="up" 
+          change={`Mua: ${data?.pnj?.buy}`} 
+        />
+
+        {/* 4. Vàng DOJI SG - Lấy dữ liệu cào */}
+        <PriceCard 
+          title="DOJI SG" 
+          price={data?.doji?.sell} 
+          unit="tr/lượng" 
+          trend="up" 
+          change={`Mua: ${data?.doji?.buy}`} 
         />
       </div>
       
@@ -63,7 +74,7 @@ export default function Dashboard() {
           </span>
           <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Dữ liệu thời gian thực</span>
         </div>
-        <div className="text-[10px] text-zinc-600 italic">
+        <div className="text-[10px] text-zinc-600 italic font-mono">
           Cập nhật cuối: {data?.updatedAt}
         </div>
       </div>

@@ -1,39 +1,58 @@
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 export default async function handler(req, res) {
   try {
-    // Lấy Key từ Biến môi trường Vercel (đã cài ở bước trước)
     const apiKey = process.env.VITE_GOLD_API_KEY;
 
-    const config = {
-      method: 'get',
-      url: 'https://www.goldapi.io/api/XAU/USD',
-      headers: { 
-        'x-access-token': apiKey, // Dùng biến môi trường cho bảo mật
-        'Content-Type': 'application/json'
+    // 1. Lấy giá thế giới từ GoldAPI
+    const worldRes = await axios.get('https://www.goldapi.io/api/XAU/USD', {
+      headers: { 'x-access-token': apiKey }
+    });
+
+    // 2. Cào dữ liệu từ 24h.com.vn (Dùng logic giống n8n của Dũng)
+    const { data } = await axios.get("https://www.24h.com.vn/gia-vang-hom-nay-c425.html", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
       }
-    };
+    });
+    
+    const $page = cheerio.load(data);
+    let sjcData = { buy: "N/A", sell: "N/A" };
+    let pnjData = { buy: "N/A", sell: "N/A" };
 
-    // Gọi API bằng Axios (Tương đương với fetch ở code mẫu)
-    const response = await axios(config);
+    $page('table tr').each((index, element) => {
+      const columns = $page(element).find('td');
+      if (columns.length >= 3) {
+        const name = $page(columns[0]).text().trim();
+        const buy = $page(columns[1]).text().trim();
+        const sell = $page(columns[2]).text().trim();
 
-    // Trả kết quả về cho Frontend React của Dũng
+        // Lọc đúng thương hiệu như Dũng yêu cầu ở n8n
+        if (name.includes("SJC TP.HCM") || name === "SJC") {
+          sjcData.buy = buy;
+          sjcData.sell = sell;
+        }
+        if (name.includes("PNJ TP.HCM")) {
+          pnjData.buy = buy;
+          pnjData.sell = sell;
+        }
+      }
+    });
+
+    // 3. Trả về JSON tổng hợp cho React
     return res.status(200).json({
       world: {
-        price: response.data.price,
-        trend: response.data.chp > 0 ? 'up' : 'down',
-        change: `${response.data.chp?.toFixed(2)}%`,
-        symbol: response.data.symbol
+        price: worldRes.data.price,
+        trend: worldRes.data.chp > 0 ? "up" : "down",
+        change: `${worldRes.data.chp?.toFixed(2)}%`
       },
+      sjc: sjcData,
+      pnj: pnjData,
       updatedAt: new Date().toLocaleTimeString('vi-VN')
     });
 
   } catch (error) {
-    // Nếu API Key sai hoặc hết hạn, nó sẽ báo lỗi ở đây
-    console.error('Lỗi GoldAPI:', error.response?.data || error.message);
-    return res.status(500).json({ 
-      error: "Lỗi gọi GoldAPI", 
-      message: error.response?.data?.message || error.message 
-    });
+    res.status(500).json({ error: error.message });
   }
 }
