@@ -78,35 +78,34 @@ export default async function handler(req, res) {
       // ==========================================
       let extractedChartData = [];
       $('script').each((_, el) => {
-        const scriptContent = $(el).html();
+        const text = $(el).html();
         
-        // Tìm đúng thẻ script có chứa thư viện biểu đồ (categories và series)
-        if (scriptContent && scriptContent.includes('categories:') && scriptContent.includes('series:')) {
+        // Chỉ quét các thẻ script có chứa biểu đồ và có chữ "Bán ra" (để né biểu đồ Thế giới)
+        if (text && text.includes('categories:') && text.includes('Bán ra')) {
             try {
-                // Rút trích mảng ngày tháng
-                const catMatch = scriptContent.match(/categories:\s*\[(.*?)\]/s);
-                // Rút trích mảng dữ liệu giá vàng
-                const seriesMatch = scriptContent.match(/series:\s*\[(.*?)\]\s*\}/s);
+                // 1. Lấy mảng Ngày tháng (Trục X)
+                const catMatch = text.match(/categories:\s*\[(.*?)\]/);
+                // 2. Lấy CHÍNH XÁC mảng dữ liệu của đường "Bán ra" (Trục Y)
+                const sellMatch = text.match(/name:\s*['"]Bán ra['"][\s\S]*?data:\s*\[(.*?)\]/);
                 
-                if (catMatch && seriesMatch) {
-                    const categories = catMatch[1].replace(/['"\s]/g, '').split(',');
-                    // Lấy tất cả các "đường biểu đồ", ta sẽ ưu tiên lấy mảng cuối cùng (thường là đường bán ra)
-                    const dataArrays = [...seriesMatch[1].matchAll(/data:\s*\[(.*?)\]/g)];
+                // Nếu tìm thấy và mảng chartData chưa có dữ liệu thì mới thêm vào
+                if (catMatch && sellMatch && extractedChartData.length === 0) {
+                    // Xóa dấu nháy đơn, nháy kép và cắt thành mảng ['08/03', '09/03']
+                    const categories = catMatch[1].replace(/['"]/g, '').split(',').map(s => s.trim());
+                    // Cắt mảng giá thành các số [165500, 166000]
+                    const priceData = sellMatch[1].split(',').map(n => parseFloat(n.trim()));
                     
-                    if (dataArrays.length > 0) {
-                        const priceData = dataArrays[dataArrays.length - 1][1].split(',').map(n => parseFloat(n));
-                        
-                        categories.forEach((date, i) => {
-                            if (date && !isNaN(priceData[i])) {
-                                // 24h hay lưu giá dạng 82000, ta chia 1000 về 82.0 để biểu đồ trông gọn
-                                const scaledPrice = priceData[i] > 1000 ? priceData[i] / 1000 : priceData[i];
-                                extractedChartData.push({
-                                    date: date,
-                                    price: parseFloat(scaledPrice.toFixed(2))
-                                });
-                            }
-                        });
-                    }
+                    categories.forEach((date, i) => {
+                        // Bỏ qua các ngày bị rỗng hoặc giá không phải là số
+                        if (date && !isNaN(priceData[i])) {
+                            // 24h lưu giá 165500, ta chia 1000 để ra 165.50 (triệu/lượng)
+                            const scaledPrice = priceData[i] > 1000 ? priceData[i] / 1000 : priceData[i];
+                            extractedChartData.push({
+                                date: date,
+                                price: parseFloat(scaledPrice.toFixed(2))
+                            });
+                        }
+                    });
                 }
             } catch (e) {
                 console.error("Lỗi parse chart 24h:", e);
@@ -119,13 +118,12 @@ export default async function handler(req, res) {
         responseData.chartData = extractedChartData.slice(-30);
       } else {
         // Dữ liệu fallback nếu 24h bảo trì script
-        const base = parseFloat(responseData.sjc.sell.replace(/,/g, '')) / 1000 || 82.5;
+        const base = parseFloat(responseData.sjc?.sell?.replace(/,/g, '')) / 1000 || 82.5;
         responseData.chartData = Array.from({length: 30}, (_, i) => ({
           date: `${i+1}/3`,
           price: parseFloat((base - (Math.random() * 1.5)).toFixed(2))
         }));
       }
-    }
 
     // ==========================================
     // 3. THẾ GIỚI
