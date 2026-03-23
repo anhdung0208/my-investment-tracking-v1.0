@@ -118,8 +118,12 @@ export default function Dashboard() {
       <div className="lg:col-span-2">
         <WorldGoldChart />
       </div>
+
+      <div className="lg:col-span-2">
+         <StockWatchlistWidget />
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <StockWatchlistWidget />
         <ForexRatesWidget />
       </div>
     </div>
