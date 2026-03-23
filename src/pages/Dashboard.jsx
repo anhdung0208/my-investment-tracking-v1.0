@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { PriceCard } from "../components/PriceCard";
+import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
 
 export default function Dashboard() {
