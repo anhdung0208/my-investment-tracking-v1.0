@@ -176,11 +176,29 @@ export default function Dashboard() {
       {/* =======================
           WIDGETS
       ======================= */}
-      <div className="flex flex-col gap-10">
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2">
         <WorldGoldChart />
-        <StockWatchlistWidget />
+      </div>
+      <div className="lg:col-span-1">
+        <TechnicalGauge />
+      </div>
+    </div>
+
+    {/* TẦNG 2: CỔ PHIẾU VIỆT NAM */}
+    <StockWatchlistWidget />
+
+    {/* TẦNG 3: NGOẠI TỆ & LỊCH KINH TẾ */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <ForexRatesWidget />
       </div>
+      <div className="lg:col-span-2">
+        <EconomicCalendar />
+      </div>
+    </div>
+
+      
 
       {/* =======================
           FOOTER
