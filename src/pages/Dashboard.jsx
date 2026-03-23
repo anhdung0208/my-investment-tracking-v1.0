@@ -44,7 +44,7 @@ export default function Dashboard() {
     );
   }
 
-  //console.log("Dữ liệu thị trường:", data);
+  console.log("Dữ liệu thị trường:", data);
   // -------------------------------------------------------
 
   return (
