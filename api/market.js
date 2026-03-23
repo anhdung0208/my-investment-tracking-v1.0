@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     // 3. THẾ GIỚI (Chạy độc lập với 24h)
     // ==========================================
     if (worldRes.status === 'fulfilled') {
-      const d = worldRes.data.price || 0;
+      const d = worldRes.value.data;
       responseData.world = { price: d.price, trend: d.chp > 0 ? 'up' : 'down', change: `${d.chp?.toFixed(2)}%` };
     }
 
