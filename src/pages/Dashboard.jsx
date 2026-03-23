@@ -25,6 +25,7 @@ export default function Dashboard() {
   useEffect(() => {
     const getData = async () => {
       const res = await fetchGoldPrices();
+      console.log("Dữ liệu nhận được từ API:", res);
       if (res) setData(res);
       setLoading(false);
     };
