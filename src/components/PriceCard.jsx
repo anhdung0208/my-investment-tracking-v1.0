@@ -3,26 +3,27 @@ import React from 'react';
 export default function PriceCard({ title, price, unit, trend, change }) {
   const isObjectPrice = typeof price === 'object' && price !== null;
 
-  // Hàm tự động tính chênh lệch giữa giá Hiện tại và giá Hôm qua
-  const getDiff = (current, old) => {
-    if (!current || !old || current === '---' || old === '---') return null;
-    const c = parseFloat(current.toString().replace(',', '.'));
-    const o = parseFloat(old.toString().replace(',', '.'));
-    if (isNaN(c) || isNaN(o)) return null;
+  // Tính toán dựa trên biến unit (biến động)
+  const getChangeData = (currentPrice, changeValue) => {
+    if (!currentPrice || currentPrice === '---') return null;
     
-    const diff = (c - o).toFixed(2);
-    if (diff == 0.00) return null; // Không đổi thì không hiện
+    // Chuyển đổi string sang number để tính toán
+    const current = parseFloat(currentPrice.toString().replace(',', '.'));
+    const diff = parseFloat(changeValue?.toString().replace(',', '.')) || 0;
     
+    if (isNaN(current)) return null;
+
     return {
-      value: Math.abs(diff),
+      oldPrice: (current - diff).toFixed(2), // Giá hôm qua = Hiện tại - Biến động
+      diffValue: Math.abs(diff).toFixed(2),
       isUp: diff > 0,
       isDown: diff < 0,
       sign: diff > 0 ? '+' : '-'
     };
   };
 
-  const buyDiff = isObjectPrice ? getDiff(price.buy, price.oldBuy) : null;
-  const sellDiff = isObjectPrice ? getDiff(price.sell, price.oldSell) : null;
+  const buyInfo = isObjectPrice ? getChangeData(price.buy, unit) : null;
+  const sellInfo = isObjectPrice ? getChangeData(price.sell, unit) : null;
 
   return (
     <div className="bg-white border border-orange-100 p-4 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300">
@@ -36,38 +37,40 @@ export default function PriceCard({ title, price, unit, trend, change }) {
             {/* Cột Mua vào */}
             <div className="flex flex-col space-y-0.5">
               <p className="text-zinc-400 text-[8px] uppercase font-bold">Mua vào</p>
-              <div className="flex items-baseline gap-0.5">
+              <div className="flex items-baseline gap-1">
                 <span className="text-xl font-bold text-zinc-800 tracking-tighter">{price.buy}</span>
-                <span className="text-[8px] text-zinc-400 font-medium">{unit}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[8px] text-zinc-400">Qua:</span>
-                <span className="text-[9px] text-zinc-600 font-semibold">{price.oldBuy}</span>
-                {/* Hiển thị mức Tăng/Giảm Mua */}
-                {buyDiff && (
-                  <span className={`text-[8px] font-bold ${buyDiff.isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    ({buyDiff.sign}{buyDiff.value})
+                {/* Hiển thị unit (biến động) ngay cạnh giá chính */}
+                {buyInfo && buyInfo.diffValue !== "0.00" && (
+                  <span className={`text-[10px] font-black ${buyInfo.isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {buyInfo.sign}{buyInfo.diffValue}
                   </span>
                 )}
+              </div>
+              <div className="flex items-center gap-1 opacity-60">
+                <span className="text-[8px] text-zinc-400">Qua:</span>
+                <span className="text-[9px] text-zinc-600 font-semibold">
+                  {buyInfo ? buyInfo.oldPrice : '---'}
+                </span>
               </div>
             </div>
 
             {/* Cột Bán ra */}
             <div className="flex flex-col space-y-0.5 border-l border-orange-50 pl-3">
               <p className="text-orange-500 text-[8px] uppercase font-bold">Bán ra</p>
-              <div className="flex items-baseline gap-0.5">
+              <div className="flex items-baseline gap-1">
                 <span className="text-xl font-black text-orange-600 tracking-tighter">{price.sell}</span>
-                <span className="text-[8px] text-orange-400 font-medium">{unit}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[8px] text-zinc-400">Qua:</span>
-                <span className="text-[9px] text-orange-600 font-bold">{price.oldSell}</span>
-                {/* Hiển thị mức Tăng/Giảm Bán */}
-                {sellDiff && (
-                  <span className={`text-[8px] font-bold ${sellDiff.isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    ({sellDiff.sign}{sellDiff.value})
+                {/* Hiển thị unit (biến động) ngay cạnh giá chính */}
+                {sellInfo && sellInfo.diffValue !== "0.00" && (
+                  <span className={`text-[10px] font-black ${sellInfo.isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {sellInfo.sign}{sellInfo.diffValue}
                   </span>
                 )}
+              </div>
+              <div className="flex items-center gap-1 opacity-60">
+                <span className="text-[8px] text-zinc-400">Qua:</span>
+                <span className="text-[9px] text-orange-600 font-bold">
+                  {sellInfo ? sellInfo.oldPrice : '---'}
+                </span>
               </div>
             </div>
           </div>
@@ -79,12 +82,13 @@ export default function PriceCard({ title, price, unit, trend, change }) {
               <span className="text-2xl font-black text-zinc-900 tracking-tighter">
                 {typeof price === 'number' ? price.toLocaleString('en-US') : price}
               </span>
-              <span className="text-zinc-500 text-[10px] font-medium">{unit}</span>
+              <span className="text-zinc-500 text-[10px] font-medium ml-1">{unit}</span>
             </div>
           </div>
         )}
       </div>
 
+      {/* Footer Card */}
       <div className="mt-4 pt-3 border-t border-zinc-50 flex items-center justify-between">
         <div className="flex items-center gap-1">
            <div className={`w-1 h-1 rounded-full ${trend === 'up' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
