@@ -4,6 +4,7 @@ import { RefreshCw } from 'lucide-react'; // Cài đặt: npm install lucide-rea
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
+import WorldGoldChart from "../components/WorldGoldChart";
 
 // Component tùy chỉnh Tooltip giữ nguyên
 const CustomTooltip = ({ active, payload, label }) => {
@@ -110,6 +111,10 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="mb-4"> {/* Thêm margin bottom nhẹ */}
+       <WorldGoldChart />
+     </div>
       
       {/* Footer giữ nguyên - Đèn tín hiệu sẽ đổi màu khi đang load ngầm */}
       <div className="flex justify-between items-center px-2">
