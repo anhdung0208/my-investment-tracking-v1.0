@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { PriceCard } from '../components/PriceCard';
-import { Header } from '../components/Header';
+import Header from '../components/Header';
 import { fetchGoldPrices } from '../services/gold';
 
 const getTrend = (sell, oldSell) => {
