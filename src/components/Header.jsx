@@ -1,6 +1,6 @@
 import { TrendingUp, Wallet } from 'lucide-react';
 
-export function Header() {
+export default function Header() {
   const today = new Date().toLocaleDateString('vi-VN');
 
   return (
