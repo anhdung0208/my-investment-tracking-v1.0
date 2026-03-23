@@ -116,36 +116,43 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-<div className="flex flex-col gap-8 pb-10">
+<div className="flex flex-col gap-10 pb-10">
   
-  {/* Hàng 1: Phân tích kỹ thuật Vàng Thế giới (TradingView) */}
-  <div className="w-full">
+  {/* TẦNG 1: Tỷ giá & Biểu đồ Vàng Thế giới (Ưu tiên cao nhất) */}
+  <section className="w-full">
     <div className="flex items-center gap-2 mb-4 px-2">
       <div className="w-1.5 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
-      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Biểu đồ Vàng Thế giới (XAU/USD)</h3>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest text-orange-600">
+        1. Phân tích Vàng Thế giới (XAU/USD)
+      </h3>
     </div>
-    <WorldGoldChart />
-  </div>
+    {/* Dũng dùng AdvancedChartWidget ở đây để có ô nhập mã nếu thích */}
+    <WorldGoldChart /> 
+  </section>
 
-  {/* Hàng 2: Danh mục Cổ phiếu (HPG, FPT...) */}
-  <div className="w-full">
+  {/* TẦNG 2: Danh mục Cổ phiếu (Nằm ngay dưới Vàng) */}
+  <section className="w-full">
     <div className="flex items-center gap-2 mb-4 px-2">
       <div className="w-1.5 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full"></div>
-      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Theo dõi Cổ phiếu Việt Nam</h3>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest text-blue-600">
+        2. Theo dõi Cổ phiếu (FPT, HPG...)
+      </h3>
     </div>
     <StockWatchlistWidget />
-  </div>
+  </section>
 
-  {/* Hàng 3: Tỷ giá Ngoại tệ (USD, EUR, JPY...) */}
-  <div className="w-full">
+  {/* TẦNG 3: Giá Ngoại tệ (Dưới cùng trong nhóm Widget) */}
+  <section className="w-full">
     <div className="flex items-center gap-2 mb-4 px-2">
       <div className="w-1.5 h-5 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full"></div>
-      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Tỷ giá ngoại tệ trực tuyến</h3>
+      <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest text-emerald-600">
+        3. Tỷ giá ngoại tệ trực tuyến
+      </h3>
     </div>
     <ForexRatesWidget />
-  </div>
+  </section>
 
-  {/* Dưới này Dũng đặt tiếp cái Biểu đồ 30 ngày (Recharts) và Footer là đẹp bài */}
+  {/* Tiếp theo là Biểu đồ 30 ngày (Recharts) và Footer của Dũng... */}
 </div>
 
       
