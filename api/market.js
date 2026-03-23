@@ -44,7 +44,6 @@ export default async function handler(req, res) {
         headers: {
           "User-Agent": "Mozilla/5.0",
           Accept: "text/html",
-          Referer: "https://www.google.com/",
         },
         timeout: 8000,
       }),
@@ -52,18 +51,22 @@ export default async function handler(req, res) {
 
     const responseData = {
       world: { price: 0, trend: "neutral", change: "0%" },
-      sjc: { buy: "---", sell: "---", diff: 0 },
-      dojiHn: { buy: "---", sell: "---", diff: 0 },
-      dojiSg: { buy: "---", sell: "---", diff: 0 },
-      btmh: { buy: "---", sell: "---", diff: 0 },
+
+      // 4 loại chính (giữ cho UI)
+      sjc: null,
+      dojiHn: null,
+      dojiSg: null,
+      btmh: null,
+
+      // 🔥 tất cả loại vàng
+      all: [],
+
+      // 🔥 các loại khác
+      others: [],
+
       chartData: [],
       updatedAt: new Date().toLocaleTimeString("vi-VN"),
     };
-
-    console.log("Status:", {
-      world: worldRes.status,
-      domestic: domesticRes.status,
-    });
 
     // ======================
     // PARSE 24H
@@ -71,13 +74,9 @@ export default async function handler(req, res) {
     if (domesticRes.status === "fulfilled") {
       const $ = cheerio.load(domesticRes.value.data);
 
-      let rowIndex = 0;
-
       $("table tr").each((_, el) => {
         const cols = $(el).find("td");
         if (cols.length < 3) return;
-
-        rowIndex++;
 
         const rawName = $(cols[0]).text();
         const name = normalize(rawName);
@@ -86,15 +85,21 @@ export default async function handler(req, res) {
         const sell = parseRaw($, cols[2]);
 
         const item = {
+          name: rawName.trim(),
+          key: name,
           buy: buy.current,
           sell: sell.current,
           diff: sell.diff,
         };
 
-        // DEBUG (có thể bật khi cần)
-        // console.log(rowIndex, name);
+        // ======================
+        // PUSH ALL
+        // ======================
+        responseData.all.push(item);
 
-        // ========= MATCH TEXT =========
+        // ======================
+        // MAP 4 LOẠI CHÍNH
+        // ======================
         if (name.includes("SJC")) {
           responseData.sjc = item;
         }
@@ -111,8 +116,7 @@ export default async function handler(req, res) {
           (
             name.includes("SG") ||
             name.includes("HCM") ||
-            name.includes("HỒ CHÍ MINH") ||
-            name.includes("SÀI GÒN")
+            name.includes("HỒ CHÍ MINH")
           )
         ) {
           responseData.dojiSg = item;
@@ -121,31 +125,41 @@ export default async function handler(req, res) {
         else if (
           name.includes("BTMC") ||
           name.includes("BẢO TÍN") ||
-          name.includes("MINH CHÂU")
+          name.includes("MINH CHÂU") ||
+          name.includes("RỒNG THĂNG LONG")
         ) {
           responseData.btmh = item;
-        }
-
-        // ========= FALLBACK THEO INDEX =========
-        // (nếu website đổi text hoàn toàn)
-        else {
-          if (rowIndex === 1 && responseData.sjc.buy === "---") {
-            responseData.sjc = item;
-          }
-          if (rowIndex === 2 && responseData.dojiHn.buy === "---") {
-            responseData.dojiHn = item;
-          }
-          if (rowIndex === 3 && responseData.dojiSg.buy === "---") {
-            responseData.dojiSg = item;
-          }
-          if (rowIndex === 4 && responseData.btmh.buy === "---") {
-            responseData.btmh = item;
-          }
         }
       });
 
       // ======================
-      // PARSE CHART
+      // OTHERS (không thuộc 4 loại)
+      // ======================
+      responseData.others = responseData.all.filter(
+        (item) =>
+          item !== responseData.sjc &&
+          item !== responseData.dojiHn &&
+          item !== responseData.dojiSg &&
+          item !== responseData.btmh
+      );
+
+      // ======================
+      // FALLBACK nếu thiếu
+      // ======================
+      if (!responseData.sjc && responseData.all[0])
+        responseData.sjc = responseData.all[0];
+
+      if (!responseData.dojiHn && responseData.all[1])
+        responseData.dojiHn = responseData.all[1];
+
+      if (!responseData.dojiSg && responseData.all[2])
+        responseData.dojiSg = responseData.all[2];
+
+      if (!responseData.btmh && responseData.all[3])
+        responseData.btmh = responseData.all[3];
+
+      // ======================
+      // CHART
       // ======================
       let extractedChartData = [];
 
@@ -154,49 +168,36 @@ export default async function handler(req, res) {
         if (!text) return;
 
         if (text.includes("categories") && text.includes("Bán ra")) {
-          try {
-            const catMatch = text.match(/categories:\s*\[([\s\S]*?)\]/);
-            const sellMatch = text.match(
-              /name:\s*['"]Bán ra['"][\s\S]*?data:\s*\[([\s\S]*?)\]/
-            );
+          const catMatch = text.match(/categories:\s*\[([\s\S]*?)\]/);
+          const sellMatch = text.match(
+            /name:\s*['"]Bán ra['"][\s\S]*?data:\s*\[([\s\S]*?)\]/
+          );
 
-            if (catMatch && sellMatch && extractedChartData.length === 0) {
-              const categories = catMatch[1]
-                .replace(/['"]/g, "")
-                .split(",")
-                .map((s) => s.trim());
+          if (catMatch && sellMatch) {
+            const categories = catMatch[1]
+              .replace(/['"]/g, "")
+              .split(",");
 
-              const prices = sellMatch[1]
-                .split(",")
-                .map((n) => parseFloat(n.trim()));
+            const prices = sellMatch[1]
+              .split(",")
+              .map((n) => parseFloat(n.trim()));
 
-              categories.forEach((date, i) => {
-                if (!date || isNaN(prices[i])) return;
+            categories.forEach((date, i) => {
+              if (!date || isNaN(prices[i])) return;
 
-                extractedChartData.push({
-                  date,
-                  price: prices[i],
-                });
+              extractedChartData.push({
+                date: date.trim(),
+                price: prices[i],
               });
-            }
-          } catch (e) {
-            console.error("Chart parse error:", e.message);
+            });
           }
         }
       });
 
-      if (extractedChartData.length > 0) {
-        responseData.chartData = extractedChartData.slice(-30);
-      } else {
-        // fallback ổn định
-        const baseSell = getNumber(responseData.sjc.sell);
-        const base = baseSell || 166000;
-
-        responseData.chartData = Array.from({ length: 30 }, (_, i) => ({
-          date: `${i + 1}`,
-          price: base - i * 500,
-        }));
-      }
+      responseData.chartData =
+        extractedChartData.length > 0
+          ? extractedChartData.slice(-30)
+          : [];
     }
 
     // ======================
