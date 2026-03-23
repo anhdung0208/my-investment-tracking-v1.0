@@ -59,7 +59,7 @@ export default function Dashboard() {
           change="Live từ 24h.com.vn" 
         />
 
-        {/* 2. DOJI Hà Nội */}
+        {/* 2. DOJI HN */}
         <PriceCard 
           title="DOJI Hà Nội" 
           price={data?.dojiHn} 
