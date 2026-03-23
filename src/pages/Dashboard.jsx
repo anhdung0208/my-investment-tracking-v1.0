@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import useSWR from "swr";
 import { RefreshCw } from "lucide-react";
 import {
@@ -15,10 +15,20 @@ import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from "../services/gold";
 import WorldGoldChart from "../components/WorldGoldChart";
 import ForexRatesWidget from "../components/ForexRatesWidget";
-import StockWatchlistWidget from "../components/StockWatchlistWidget";
+
+// Lazy load heavy widgets
+const StockWatchlistWidget = React.lazy(() =>
+  import("../components/StockWatchlistWidget")
+);
+const TechnicalGauge = React.lazy(() =>
+  import("../components/TechnicalGauge")
+);
+const EconomicCalendar = React.lazy(() =>
+  import("../components/EconomicCalendar")
+);
 
 // =======================
-// TOOLTIP (SAFE)
+// TOOLTIP
 // =======================
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
@@ -57,9 +67,6 @@ export default function Dashboard() {
     await mutate();
   };
 
-  // =======================
-  // LOADING
-  // =======================
   if (!data && !error) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -71,9 +78,6 @@ export default function Dashboard() {
     );
   }
 
-  // =======================
-  // GOLD LIST
-  // =======================
   const goldList = [
     { key: "dojiSg", title: "DOJI Sài Gòn" },
     { key: "sjc", title: "SJC Toàn Quốc" },
@@ -92,7 +96,7 @@ export default function Dashboard() {
         <button
           onClick={handleRefresh}
           disabled={isValidating}
-          className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold transition-all text-[11px]
+          className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-[11px]
           ${
             isValidating
               ? "bg-zinc-100 text-zinc-400"
@@ -108,9 +112,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* =======================
-          4 THẺ GIÁ
-      ======================= */}
+      {/* PRICE CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {goldList.map((item) => (
           <PriceCard
@@ -122,9 +124,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* =======================
-          CHART 30 NGÀY
-      ======================= */}
+      {/* CHART */}
       <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-sm font-black text-zinc-800 uppercase">
@@ -154,10 +154,7 @@ export default function Dashboard() {
                 axisLine={false}
               />
 
-              <YAxis
-                hide
-                domain={["dataMin - 500", "dataMax + 500"]}
-              />
+              <YAxis hide domain={["dataMin - 500", "dataMax + 500"]} />
 
               <Tooltip content={<CustomTooltip />} />
 
@@ -173,36 +170,56 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* =======================
-          WIDGETS
-      ======================= */}
-     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2">
-        <WorldGoldChart />
-      </div>
-      <div className="lg:col-span-1">
-        <TechnicalGauge />
-      </div>
-    </div>
+      {/* GLOBAL + TECH */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Thị trường vàng thế giới
+        </h3>
 
-    {/* TẦNG 2: CỔ PHIẾU VIỆT NAM */}
-    <StockWatchlistWidget />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <WorldGoldChart />
+          </div>
 
-    {/* TẦNG 3: NGOẠI TỆ & LỊCH KINH TẾ */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-1">
-        <ForexRatesWidget />
+          <div className="lg:col-span-1">
+            <Suspense fallback={<div>Loading...</div>}>
+              <TechnicalGauge />
+            </Suspense>
+          </div>
+        </div>
       </div>
-      <div className="lg:col-span-2">
-        <EconomicCalendar />
+
+      {/* FOREX + ECONOMIC */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Ngoại tệ & Kinh tế vĩ mô
+        </h3>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <ForexRatesWidget />
+          </div>
+
+          <div className="lg:col-span-2">
+            <Suspense fallback={<div>Loading...</div>}>
+              <EconomicCalendar />
+            </Suspense>
+          </div>
+        </div>
       </div>
-    </div>
 
-      
+      {/* STOCK */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Thị trường cổ phiếu
+        </h3>
 
-      {/* =======================
-          FOOTER
-      ======================= */}
+        <Suspense fallback={<div>Loading...</div>}>
+          <StockWatchlistWidget />
+        </Suspense>
+      </div>
+
+      {/* FOOTER */}
       <div className="flex justify-between items-center px-2 pt-6 border-t">
         <span className="text-[10px] text-zinc-500 uppercase font-bold">
           {isValidating ? "Đang đồng bộ..." : "Live Market Data"}
