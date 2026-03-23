@@ -3,6 +3,21 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import PriceCard from "../components/PriceCard";
 import { fetchGoldPrices } from '../services/gold';
 
+// Component tùy chỉnh Tooltip cho biểu đồ đẹp hơn
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-orange-50">
+        <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">{label}</p>
+        <p className="text-orange-600 font-black text-lg">
+          {payload[0].value.toFixed(2)} <span className="text-[10px] text-orange-400 font-semibold">tr/lượng</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +35,7 @@ export default function Dashboard() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-        <span className="ml-3 text-zinc-400 font-medium">Đang cào dữ liệu Giavang.net...</span>
+        <span className="ml-3 text-zinc-400 font-medium">Đang cào dữ liệu 24h.com.vn...</span>
       </div>
     );
   }
@@ -28,12 +43,20 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 3. DOJI Sài Gòn */}
+        <PriceCard 
+          title="DOJI Sài Gòn" 
+          price={data?.dojiSg} 
+          unit="đ" 
+          change="Live từ 24h.com.vn" 
+        />
+        
         {/* 1. SJC */}
         <PriceCard 
           title="SJC Toàn Quốc" 
           price={data?.sjc} 
           unit="đ" 
-          change="Live từ Giavang.net" 
+          change="Live từ 24h.com.vn" 
         />
 
         {/* 2. DOJI Hà Nội */}
@@ -41,15 +64,7 @@ export default function Dashboard() {
           title="DOJI Hà Nội" 
           price={data?.dojiHn} 
           unit="đ" 
-          change="Live từ Giavang.net" 
-        />
-
-        {/* 3. DOJI Sài Gòn */}
-        <PriceCard 
-          title="DOJI Sài Gòn" 
-          price={data?.dojiSg} 
-          unit="đ" 
-          change="Live từ Giavang.net" 
+          change="Live từ 24h.com.vn" 
         />
 
         {/* 4. Bảo Tín Minh Châu (BTMH) */}
@@ -57,36 +72,54 @@ export default function Dashboard() {
           title="Bảo Tín Minh Châu" 
           price={data?.btmh} 
           unit="đ" 
-          change="Live từ Giavang.net" 
+          change="Live từ 24h.com.vn" 
         />
       </div>
       
-      {/* Phần Biểu đồ giữ nguyên */}
-      <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm">
-        <div className="flex justify-between items-center mb-8">
+      {/* PHẦN BIỂU ĐỒ NÂNG CẤP */}
+      <div className="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm overflow-hidden relative">
+        <div className="flex justify-between items-center mb-8 relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-5 bg-orange-500 rounded-full"></div>
-            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Biến động 30 ngày</h3>
+            <div className="w-1.5 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
+            <h3 className="text-sm font-black text-zinc-800 uppercase tracking-widest">Lịch sử 30 ngày</h3>
           </div>
-          <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-            Dữ liệu: giavang.net
+          <span className="text-[9px] font-bold text-orange-600 bg-orange-50/80 px-3 py-1.5 rounded-full border border-orange-100/50 backdrop-blur-sm">
+            Nguồn: 24h.com.vn
           </span>
         </div>
         
-        <div className="h-[280px] w-full">
+        <div className="h-[280px] w-full -mx-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data?.chartData}>
+            <AreaChart data={data?.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#F97316" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                  <stop offset="0%" stopColor="#f97316" stopOpacity={0.4}/>
+                  <stop offset="75%" stopColor="#f97316" stopOpacity={0.05}/>
+                  <stop offset="100%" stopColor="#f97316" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-              <XAxis dataKey="date" fontSize={9} tickLine={false} axisLine={false} tick={{fill: '#94A3B8'}} dy={10} />
-              <YAxis hide domain={['dataMin - 1', 'dataMax + 1']} />
-              <Tooltip contentStyle={{ border: 'none', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: '12px' }} />
-              <Area type="monotone" dataKey="price" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorPrice)" />
+              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+              <XAxis 
+                dataKey="date" 
+                fontSize={9} 
+                tickLine={false} 
+                axisLine={false} 
+                tick={{fill: '#94a3b8', fontWeight: 600}} 
+                dy={15} 
+                minTickGap={20} // Tránh các ngày bị dính chữ vào nhau
+              />
+              {/* Căn chỉnh Domain thông minh hơn để chart có độ nhấp nhô đẹp */}
+              <YAxis hide domain={['dataMin - 0.5', 'dataMax + 0.5']} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#fdba74', strokeWidth: 1, strokeDasharray: '4 4' }} />
+              <Area 
+                type="monotone" 
+                dataKey="price" 
+                stroke="#ea580c" 
+                strokeWidth={4} // Nét đậm hơn
+                fillOpacity={1} 
+                fill="url(#colorPrice)" 
+                activeDot={{ r: 6, fill: "#ea580c", stroke: "#fff", strokeWidth: 3, shadow: "0px 0px 10px rgba(234, 88, 12, 0.5)" }} // Dot đẹp khi hover
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
