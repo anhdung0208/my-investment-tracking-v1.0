@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   try {
     const [worldRes, domesticRes] = await Promise.allSettled([
       axios.get('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': apiKey }, timeout: 5000 }),
-      axios.get('https://giavang.net/', { headers: { "User-Agent": "Mozilla/5.0" }, timeout: 8000 }) // Sửa lại URL nguồn
+      axios.get('https://www.24h.com.vn/gia-vang-hom-nay-c425.html', { headers: { "User-Agent": "Mozilla/5.0" }, timeout: 8000 })
     ]);
 
     let responseData = {
