@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=30');
+  //res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=30');
   const apiKey = process.env.GOLD_API_KEY;
 
   try {
@@ -22,6 +22,8 @@ export default async function handler(req, res) {
       chartData: [],
       updatedAt: new Date().toLocaleTimeString('vi-VN')
     };
+
+    console.log('API Responses:', { worldRes, domesticRes });
 
     // ==========================================
     // 1. & 2. CÀO BẢNG GIÁ VÀ BIỂU ĐỒ 24H
