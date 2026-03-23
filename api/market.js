@@ -92,7 +92,7 @@ export default async function handler(req, res) {
         };
 
         // DEBUG (có thể bật khi cần)
-        // console.log(rowIndex, name);
+        console.log(rowIndex, name);
 
         // ========= MATCH TEXT =========
         if (name.includes("SJC")) {
@@ -119,9 +119,9 @@ export default async function handler(req, res) {
         }
 
         else if (
-          name.includes("BTMC") ||
+          name.includes("BTMH") ||
           name.includes("BẢO TÍN") ||
-          name.includes("MINH CHÂU")
+          name.includes("MẠNH HẢI")
         ) {
           responseData.btmh = item;
         }
