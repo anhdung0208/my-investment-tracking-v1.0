@@ -9,8 +9,8 @@ export default function Header() {
           <TrendingUp className="text-white" size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">Dũng Investment</h1>
-          <p className="text-[10px] text-orange-500 font-bold tracking-[0.2em] uppercase">Market is Realtime</p>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tighter uppercase">Investment</h1>
+          <p className="text-[10px] text-orange-500 font-bold tracking-[0.2em] uppercase">Market Realtime</p>
         </div>
       </div>
       <div className="flex items-center gap-4">
