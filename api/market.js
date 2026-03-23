@@ -3,11 +3,11 @@ import * as cheerio from 'cheerio';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=30');
-  const apiKey = process.env.VITE_GOLD_API_KEY;
+  const apiKey = process.env.GOLD_API_KEY;
 
   try {
     const [worldRes, domesticRes] = await Promise.allSettled([
-      axios.get('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': apiKey }, timeout: 5000 }),
+      axios.get('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': apiKey }, timeout: 6000 }),
       axios.get('https://www.24h.com.vn/gia-vang-hom-nay-c425.html', { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
           "Referer": "https://www.google.com/" }, timeout: 8000 })
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     // 3. THẾ GIỚI (Chạy độc lập với 24h)
     // ==========================================
     if (worldRes.status === 'fulfilled') {
-      const d = worldRes.value.data;
+      const d = worldRes.data.price || 0;
       responseData.world = { price: d.price, trend: d.chp > 0 ? 'up' : 'down', change: `${d.chp?.toFixed(2)}%` };
     }
 
