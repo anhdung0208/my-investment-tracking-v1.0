@@ -66,10 +66,37 @@ export default function Dashboard() {
 
       {/* KHỐI 1: 4 THẺ GIÁ VÀNG TRONG NƯỚC */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PriceCard title="DOJI Sài Gòn" price={data?.dojiSg} unit="đ" change="Live từ 24h.com.vn" />
-        <PriceCard title="SJC Toàn Quốc" price={data?.sjc} unit="đ" change="Live từ 24h.com.vn" />
-        <PriceCard title="DOJI Hà Nội" price={data?.dojiHn} unit="đ" change="Live từ 24h.com.vn" />
-        <PriceCard title="Bảo Tín Minh Châu" price={data?.btmh} unit="đ" change="Live từ 24h.com.vn" />
+        <PriceCard
+  title="DOJI Sài Gòn"
+  buy={data?.dojiSg?.buy}
+  sell={data?.dojiSg?.sell}
+  diff={data?.dojiSg?.diff}
+  unit="đ"
+/>
+
+<PriceCard
+  title="SJC Toàn Quốc"
+  buy={data?.sjc?.buy}
+  sell={data?.sjc?.sell}
+  diff={data?.sjc?.diff}
+  unit="đ"
+/>
+
+<PriceCard
+  title="DOJI Hà Nội"
+  buy={data?.dojiHn?.buy}
+  sell={data?.dojiHn?.sell}
+  diff={data?.dojiHn?.diff}
+  unit="đ"
+/>
+
+<PriceCard
+  title="Bảo Tín Minh Châu"
+  buy={data?.btmh?.buy}
+  sell={data?.btmh?.sell}
+  diff={data?.btmh?.diff}
+  unit="đ"
+/>
       </div>
 
       {/* KHỐI 2: BIỂU ĐỒ 30 NGÀY (RECHARTS) */}
