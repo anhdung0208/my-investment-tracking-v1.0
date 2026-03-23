@@ -1,5 +1,6 @@
 export default function PriceCard({ title, price, unit, trend, change }) {
   const isObjectPrice = typeof price === 'object' && price !== null;
+  console.log("PriceCard Rendered:", { title, price, unit, trend, change });
 
   return (
     <div className="bg-white border border-orange-100 p-4 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300">
