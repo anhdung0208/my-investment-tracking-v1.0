@@ -16,16 +16,21 @@ const getNumber = (val) => {
   return isNaN(n) ? null : n;
 };
 
+// ✅ parse chuẩn: tách theo dòng hoặc <br>
 const parseRaw = ($, td) => {
-  const text = $(td).text().replace(/\s+/g, " ").trim();
+  const parts = $(td)
+    .contents()
+    .map((_, el) => $(el).text().trim())
+    .get()
+    .filter(Boolean);
 
-  const priceMatch = text.match(/[\d,.]+/);
-  const diffMatch = text.match(/([+-]\s*[\d,.]+)/);
+  let current = "---";
+  let diff = 0;
 
-  return {
-    current: priceMatch ? priceMatch[0] : "---",
-    diff: diffMatch ? getNumber(diffMatch[1]) || 0 : 0,
-  };
+  if (parts.length > 0) current = parts[0];
+  if (parts.length > 1) diff = getNumber(parts[1]) || 0;
+
+  return { current, diff };
 };
 
 // ======================
@@ -52,21 +57,23 @@ export default async function handler(req, res) {
 
     const responseData = {
       world: { price: 0, trend: "neutral", change: "0%" },
+
       sjc: { buy: "---", sell: "---", diff: 0 },
       dojiHn: { buy: "---", sell: "---", diff: 0 },
       dojiSg: { buy: "---", sell: "---", diff: 0 },
       btmh: { buy: "---", sell: "---", diff: 0 },
+
       chartData: [],
       updatedAt: new Date().toLocaleTimeString("vi-VN"),
     };
 
-    console.log("Status:", {
+    console.log("Fetch status:", {
       world: worldRes.status,
       domestic: domesticRes.status,
     });
 
     // ======================
-    // PARSE 24H
+    // PARSE DOMESTIC (24H)
     // ======================
     if (domesticRes.status === "fulfilled") {
       const $ = cheerio.load(domesticRes.value.data);
@@ -79,46 +86,35 @@ export default async function handler(req, res) {
 
         rowIndex++;
 
-        const rawName = $(cols[0]).text();
-        const name = normalize(rawName);
+        const name = normalize($(cols[0]).text());
 
         const buy = parseRaw($, cols[1]);
         const sell = parseRaw($, cols[2]);
 
         const item = {
-          buy: buy.current,
-          sell: sell.current,
-          diff: sell.diff,
-        };
-
-        // DEBUG (có thể bật khi cần)
-        console.log(rowIndex, name);
+  buy: buy.current,
+  sell: sell.current,
+  buyDiff: buy.diff,
+  sellDiff: sell.diff,
+};
 
         // ========= MATCH TEXT =========
         if (name.includes("SJC")) {
           responseData.sjc = item;
-        }
-
-        else if (
+        } else if (
           name.includes("DOJI") &&
           (name.includes("HN") || name.includes("HÀ NỘI"))
         ) {
           responseData.dojiHn = item;
-        }
-
-        else if (
+        } else if (
           name.includes("DOJI") &&
-          (
-            name.includes("SG") ||
+          (name.includes("SG") ||
             name.includes("HCM") ||
             name.includes("HỒ CHÍ MINH") ||
-            name.includes("SÀI GÒN")
-          )
+            name.includes("SÀI GÒN"))
         ) {
           responseData.dojiSg = item;
-        }
-
-        else if (
+        } else if (
           name.includes("BTMH") ||
           name.includes("BẢO TÍN") ||
           name.includes("MẠNH HẢI")
@@ -126,8 +122,7 @@ export default async function handler(req, res) {
           responseData.btmh = item;
         }
 
-        // ========= FALLBACK THEO INDEX =========
-        // (nếu website đổi text hoàn toàn)
+        // ========= FALLBACK =========
         else {
           if (rowIndex === 1 && responseData.sjc.buy === "---") {
             responseData.sjc = item;
@@ -185,10 +180,10 @@ export default async function handler(req, res) {
         }
       });
 
+      // fallback chart
       if (extractedChartData.length > 0) {
         responseData.chartData = extractedChartData.slice(-30);
       } else {
-        // fallback ổn định
         const baseSell = getNumber(responseData.sjc.sell);
         const base = baseSell || 166000;
 

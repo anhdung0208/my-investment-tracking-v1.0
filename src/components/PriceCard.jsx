@@ -16,7 +16,7 @@ export default function PriceCard({ title, price, unit }) {
   // CHANGE INFO
   // ========================
   const getChangeInfo = (diffValue) => {
-    if (!diffValue) return null;
+    if (diffValue === null || diffValue === undefined) return null;
 
     const isUp = diffValue > 0;
     const displayValue = Math.abs(diffValue).toLocaleString("en-US");
@@ -24,16 +24,25 @@ export default function PriceCard({ title, price, unit }) {
     return {
       val: displayValue,
       isUp,
-      sign: isUp ? "▲" : "▼",
+      sign: isUp ? "▲" : diffValue < 0 ? "▼" : "●",
     };
   };
 
-  const changeInfo = isObjectPrice ? getChangeInfo(price.diff) : null;
-  const cardTrend = changeInfo
-    ? changeInfo.isUp
+  const buyChange = isObjectPrice
+    ? getChangeInfo(price.buyDiff)
+    : null;
+
+  const sellChange = isObjectPrice
+    ? getChangeInfo(price.sellDiff)
+    : null;
+
+  // trend dựa theo SELL
+  const cardTrend =
+    sellChange?.isUp === true
       ? "up"
-      : "down"
-    : "neutral";
+      : sellChange?.isUp === false
+      ? "down"
+      : "neutral";
 
   // ========================
   // OLD PRICE
@@ -70,16 +79,18 @@ export default function PriceCard({ title, price, unit }) {
                   {formatNumber(price.buy)}
                 </span>
 
-                {changeInfo && (
+                {buyChange && (
                   <span
                     className={`text-[10px] font-black ${
-                      changeInfo.isUp
+                      buyChange.isUp
                         ? "text-emerald-500"
-                        : "text-rose-500"
+                        : buyChange.isUp === false
+                        ? "text-rose-500"
+                        : "text-zinc-400"
                     }`}
                   >
-                    {changeInfo.sign}
-                    {changeInfo.val}
+                    {buyChange.sign}
+                    {buyChange.val}
                   </span>
                 )}
               </div>
@@ -87,7 +98,7 @@ export default function PriceCard({ title, price, unit }) {
               <p className="text-[8px] text-zinc-400">
                 Qua:{" "}
                 <span className="font-semibold text-zinc-600">
-                  {getOldPrice(price.buy, price.diff)}
+                  {getOldPrice(price.buy, price.buyDiff)}
                 </span>
               </p>
             </div>
@@ -103,16 +114,18 @@ export default function PriceCard({ title, price, unit }) {
                   {formatNumber(price.sell)}
                 </span>
 
-                {changeInfo && (
+                {sellChange && (
                   <span
                     className={`text-[10px] font-black ${
-                      changeInfo.isUp
+                      sellChange.isUp
                         ? "text-emerald-500"
-                        : "text-rose-500"
+                        : sellChange.isUp === false
+                        ? "text-rose-500"
+                        : "text-zinc-400"
                     }`}
                   >
-                    {changeInfo.sign}
-                    {changeInfo.val}
+                    {sellChange.sign}
+                    {sellChange.val}
                   </span>
                 )}
               </div>
@@ -120,7 +133,7 @@ export default function PriceCard({ title, price, unit }) {
               <p className="text-[8px] text-zinc-400">
                 Qua:{" "}
                 <span className="font-semibold text-zinc-600">
-                  {getOldPrice(price.sell, price.diff)}
+                  {getOldPrice(price.sell, price.sellDiff)}
                 </span>
               </p>
             </div>
