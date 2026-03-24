@@ -54,8 +54,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
+  // ✅ dùng API thật thay vì "gold-prices"
+  const API_URL = "/api/gold";
+
   const { data, error, mutate, isValidating } = useSWR(
-    "gold-prices",
+    API_URL,
     fetchGoldPrices,
     {
       revalidateOnFocus: false,
@@ -63,8 +66,15 @@ export default function Dashboard() {
     }
   );
 
+  // ✅ FORCE REFRESH (bỏ cache backend)
   const handleRefresh = async () => {
-    await mutate();
+    await mutate(
+      fetch(`${API_URL}?refresh=true`).then((res) => res.json()),
+      {
+        revalidate: false,
+        populateCache: true,
+      }
+    );
   };
 
   if (!data && !error) {
