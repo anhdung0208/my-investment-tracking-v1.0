@@ -1,13 +1,10 @@
-export const fetchGoldPrices = async (url) => {
-  const res = await fetch(url, {
-    headers: {
-      "Cache-Control": "no-cache", // tránh cache trình duyệt
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error("Fetch failed");
+export const fetchGoldPrices = async () => {
+  try {
+    const response = await fetch('/api/market');
+    if (!response.ok) throw new Error('Network response was not ok');
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi lấy dữ liệu:", error);
+    return null;
   }
-
-  return res.json();
 };
