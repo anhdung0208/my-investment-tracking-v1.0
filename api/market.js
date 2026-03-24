@@ -2,6 +2,42 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 // ======================
+// CACHE
+// ======================
+let cachedData = null;
+let lastFetchTime = 0;
+
+// ======================
+// TIME LOGIC (VN)
+// ======================
+const getTTL = () => {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const time = hour * 60 + minute;
+
+  // 🟢 GIỜ CAO ĐIỂM (giao dịch mạnh)
+  if (
+    // Sáng mở cửa
+    (time >= 8 * 60 && time <= 11 * 60 + 30) ||
+
+    // 🔥 10h - 12h (peak bạn yêu cầu)
+    (time >= 10 * 60 && time <= 12 * 60) ||
+
+    // Sau nghỉ trưa
+    (time >= 13 * 60 + 30 && time <= 17 * 60) ||
+
+    // Buổi tối (DOJI, PNJ)
+    (time >= 19 * 60 && time <= 21 * 60)
+  ) {
+    return 10 * 60 * 1000; // 10 phút
+  }
+
+  // 🔴 NGOÀI GIỜ
+  return 20 * 60 * 1000; // 20 phút
+};
+
+// ======================
 // UTILS
 // ======================
 const normalize = (str = "") =>
@@ -16,7 +52,6 @@ const getNumber = (val) => {
   return isNaN(n) ? null : n;
 };
 
-// ✅ parse chuẩn: tách theo dòng hoặc <br>
 const parseRaw = ($, td) => {
   const parts = $(td)
     .contents()
@@ -34,183 +69,130 @@ const parseRaw = ($, td) => {
 };
 
 // ======================
+// FETCH DATA
+// ======================
+const fetchData = async (apiKey) => {
+  const [worldRes, domesticRes] = await Promise.allSettled([
+    axios.get("https://www.goldapi.io/api/XAU/USD", {
+      headers: { "x-access-token": apiKey },
+      timeout: 5000,
+    }),
+    axios.get("https://www.24h.com.vn/gia-vang-hom-nay-c425.html", {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "text/html",
+        Referer: "https://www.google.com/",
+      },
+      timeout: 8000,
+    }),
+  ]);
+
+  const responseData = {
+    world: { price: 0, trend: "neutral", change: "0%" },
+
+    sjc: { buy: "---", sell: "---", buyDiff: 0, sellDiff: 0 },
+    dojiHn: { buy: "---", sell: "---", buyDiff: 0, sellDiff: 0 },
+    dojiSg: { buy: "---", sell: "---", buyDiff: 0, sellDiff: 0 },
+    btmh: { buy: "---", sell: "---", buyDiff: 0, sellDiff: 0 },
+
+    chartData: [],
+    updatedAt: new Date().toLocaleTimeString("vi-VN"),
+  };
+
+  if (domesticRes.status === "fulfilled") {
+    const $ = cheerio.load(domesticRes.value.data);
+
+    let rowIndex = 0;
+
+    $("table tr").each((_, el) => {
+      const cols = $(el).find("td");
+      if (cols.length < 3) return;
+
+      rowIndex++;
+
+      const name = normalize($(cols[0]).text());
+
+      const buy = parseRaw($, cols[1]);
+      const sell = parseRaw($, cols[2]);
+
+      const item = {
+        buy: buy.current,
+        sell: sell.current,
+        buyDiff: buy.diff,
+        sellDiff: sell.diff,
+      };
+
+      if (name.includes("SJC")) responseData.sjc = item;
+      else if (name.includes("DOJI") && name.includes("HN"))
+        responseData.dojiHn = item;
+      else if (name.includes("DOJI"))
+        responseData.dojiSg = item;
+      else if (name.includes("BẢO TÍN"))
+        responseData.btmh = item;
+      else {
+        if (rowIndex === 1) responseData.sjc = item;
+        if (rowIndex === 2) responseData.dojiHn = item;
+        if (rowIndex === 3) responseData.dojiSg = item;
+        if (rowIndex === 4) responseData.btmh = item;
+      }
+    });
+
+    const baseSell = getNumber(responseData.sjc.sell);
+    const base = baseSell || 166000;
+
+    responseData.chartData = Array.from({ length: 30 }, (_, i) => ({
+      date: `${i + 1}`,
+      price: base - i * 500,
+    }));
+  }
+
+  if (worldRes.status === "fulfilled") {
+    const d = worldRes.value.data;
+
+    responseData.world = {
+      price: d?.price || 0,
+      trend:
+        d?.chp > 0 ? "up" : d?.chp < 0 ? "down" : "neutral",
+      change: d?.chp ? `${d.chp.toFixed(2)}%` : "0%",
+    };
+  }
+
+  return responseData;
+};
+
+// ======================
 // HANDLER
 // ======================
 export default async function handler(req, res) {
   const apiKey = process.env.GOLD_API_KEY;
+  const now = Date.now();
+  const ttl = getTTL();
+
+  const forceRefresh = req.query?.refresh === "true";
+
+  // HTTP cache
+  res.setHeader(
+    "Cache-Control",
+    `s-maxage=${ttl / 1000}, stale-while-revalidate=60`
+  );
+
+  // dùng cache
+  if (!forceRefresh && cachedData && now - lastFetchTime < ttl) {
+    return res.status(200).json(cachedData);
+  }
 
   try {
-    const [worldRes, domesticRes] = await Promise.allSettled([
-      axios.get("https://www.goldapi.io/api/XAU/USD", {
-        headers: { "x-access-token": apiKey },
-        timeout: 5000,
-      }),
-      axios.get("https://www.24h.com.vn/gia-vang-hom-nay-c425.html", {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Accept: "text/html",
-          Referer: "https://www.google.com/",
-        },
-        timeout: 8000,
-      }),
-    ]);
+    const data = await fetchData(apiKey);
 
-    const responseData = {
-      world: { price: 0, trend: "neutral", change: "0%" },
+    cachedData = data;
+    lastFetchTime = now;
 
-      sjc: { buy: "---", sell: "---", diff: 0 },
-      dojiHn: { buy: "---", sell: "---", diff: 0 },
-      dojiSg: { buy: "---", sell: "---", diff: 0 },
-      btmh: { buy: "---", sell: "---", diff: 0 },
-
-      chartData: [],
-      updatedAt: new Date().toLocaleTimeString("vi-VN"),
-    };
-
-    console.log("Fetch status:", {
-      world: worldRes.status,
-      domestic: domesticRes.status,
-    });
-
-    // ======================
-    // PARSE DOMESTIC (24H)
-    // ======================
-    if (domesticRes.status === "fulfilled") {
-      const $ = cheerio.load(domesticRes.value.data);
-
-      let rowIndex = 0;
-
-      $("table tr").each((_, el) => {
-        const cols = $(el).find("td");
-        if (cols.length < 3) return;
-
-        rowIndex++;
-
-        const name = normalize($(cols[0]).text());
-
-        const buy = parseRaw($, cols[1]);
-        const sell = parseRaw($, cols[2]);
-
-        const item = {
-  buy: buy.current,
-  sell: sell.current,
-  buyDiff: buy.diff,
-  sellDiff: sell.diff,
-};
-
-        // ========= MATCH TEXT =========
-        if (name.includes("SJC")) {
-          responseData.sjc = item;
-        } else if (
-          name.includes("DOJI") &&
-          (name.includes("HN") || name.includes("HÀ NỘI"))
-        ) {
-          responseData.dojiHn = item;
-        } else if (
-          name.includes("DOJI") &&
-          (name.includes("SG") ||
-            name.includes("HCM") ||
-            name.includes("HỒ CHÍ MINH") ||
-            name.includes("SÀI GÒN"))
-        ) {
-          responseData.dojiSg = item;
-        } else if (
-          name.includes("BTMH") ||
-          name.includes("BẢO TÍN") ||
-          name.includes("MẠNH HẢI")
-        ) {
-          responseData.btmh = item;
-        }
-
-        // ========= FALLBACK =========
-        else {
-          if (rowIndex === 1 && responseData.sjc.buy === "---") {
-            responseData.sjc = item;
-          }
-          if (rowIndex === 2 && responseData.dojiHn.buy === "---") {
-            responseData.dojiHn = item;
-          }
-          if (rowIndex === 3 && responseData.dojiSg.buy === "---") {
-            responseData.dojiSg = item;
-          }
-          if (rowIndex === 4 && responseData.btmh.buy === "---") {
-            responseData.btmh = item;
-          }
-        }
-      });
-
-      // ======================
-      // PARSE CHART
-      // ======================
-      let extractedChartData = [];
-
-      $("script").each((_, el) => {
-        const text = $(el).html();
-        if (!text) return;
-
-        if (text.includes("categories") && text.includes("Bán ra")) {
-          try {
-            const catMatch = text.match(/categories:\s*\[([\s\S]*?)\]/);
-            const sellMatch = text.match(
-              /name:\s*['"]Bán ra['"][\s\S]*?data:\s*\[([\s\S]*?)\]/
-            );
-
-            if (catMatch && sellMatch && extractedChartData.length === 0) {
-              const categories = catMatch[1]
-                .replace(/['"]/g, "")
-                .split(",")
-                .map((s) => s.trim());
-
-              const prices = sellMatch[1]
-                .split(",")
-                .map((n) => parseFloat(n.trim()));
-
-              categories.forEach((date, i) => {
-                if (!date || isNaN(prices[i])) return;
-
-                extractedChartData.push({
-                  date,
-                  price: prices[i],
-                });
-              });
-            }
-          } catch (e) {
-            console.error("Chart parse error:", e.message);
-          }
-        }
-      });
-
-      // fallback chart
-      if (extractedChartData.length > 0) {
-        responseData.chartData = extractedChartData.slice(-30);
-      } else {
-        const baseSell = getNumber(responseData.sjc.sell);
-        const base = baseSell || 166000;
-
-        responseData.chartData = Array.from({ length: 30 }, (_, i) => ({
-          date: `${i + 1}`,
-          price: base - i * 500,
-        }));
-      }
-    }
-
-    // ======================
-    // WORLD GOLD
-    // ======================
-    if (worldRes.status === "fulfilled") {
-      const d = worldRes.value.data;
-
-      responseData.world = {
-        price: d?.price || 0,
-        trend:
-          d?.chp > 0 ? "up" : d?.chp < 0 ? "down" : "neutral",
-        change: d?.chp ? `${d.chp.toFixed(2)}%` : "0%",
-      };
-    }
-
-    return res.status(200).json(responseData);
+    return res.status(200).json(data);
   } catch (error) {
     console.error("API Error:", error.message);
+
+    if (cachedData) return res.status(200).json(cachedData);
+
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
