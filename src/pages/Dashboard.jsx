@@ -16,7 +16,7 @@ import { fetchGoldPrices } from "../services/gold";
 import WorldGoldChart from "../components/WorldGoldChart";
 import ForexRatesWidget from "../components/ForexRatesWidget";
 
-// Lazy load
+// Lazy load heavy widgets
 const StockWatchlistWidget = React.lazy(() =>
   import("../components/StockWatchlistWidget")
 );
@@ -54,10 +54,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const API_URL = "/api/gold";
-
   const { data, error, mutate, isValidating } = useSWR(
-    API_URL,
+    "gold-prices",
     fetchGoldPrices,
     {
       revalidateOnFocus: false,
@@ -65,17 +63,8 @@ export default function Dashboard() {
     }
   );
 
-  // =======================
-  // 🔥 FORCE REFRESH
-  // =======================
   const handleRefresh = async () => {
-    await mutate(
-      fetch(`${API_URL}?refresh=true`).then((res) => res.json()),
-      {
-        revalidate: false,
-        populateCache: true,
-      }
-    );
+    await mutate();
   };
 
   if (!data && !error) {
@@ -179,6 +168,55 @@ export default function Dashboard() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* GLOBAL + TECH */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Thị trường vàng thế giới
+        </h3>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <WorldGoldChart />
+          </div>
+
+          <div className="lg:col-span-1">
+            <Suspense fallback={<div>Loading...</div>}>
+              <TechnicalGauge />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+
+      {/* FOREX + ECONOMIC */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Ngoại tệ & Kinh tế vĩ mô
+        </h3>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <ForexRatesWidget />
+          </div>
+
+          <div className="lg:col-span-2">
+            <Suspense fallback={<div>Loading...</div>}>
+              <EconomicCalendar />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+
+      {/* STOCK */}
+      <div>
+        <h3 className="text-xs font-black uppercase text-zinc-500 mb-3 px-1">
+          Thị trường cổ phiếu
+        </h3>
+
+        <Suspense fallback={<div>Loading...</div>}>
+          <StockWatchlistWidget />
+        </Suspense>
       </div>
 
       {/* FOOTER */}
