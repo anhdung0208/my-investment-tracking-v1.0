@@ -17,7 +17,7 @@ const getNumber = (val) => {
   return isNaN(n) ? null : n;
 };
 
-// ✅ parse chuẩn: tách theo dòng hoặc <br>
+// parse chuẩn: tách theo text và xác định tăng/giảm qua html
 const parseRaw = ($, td) => {
   const parts = $(td)
     .contents()
@@ -29,7 +29,27 @@ const parseRaw = ($, td) => {
   let diff = 0;
 
   if (parts.length > 0) current = parts[0];
-  if (parts.length > 1) diff = getNumber(parts[1]) || 0;
+  if (parts.length > 1) {
+    diff = getNumber(parts[1]) || 0;
+    
+    // Check if it's down (24h uses classes like 'downIcon', 'ic_down', or text 'giảm')
+    const htmlContent = $(td).html()?.toLowerCase() || '';
+    if (htmlContent.includes('down') || htmlContent.includes('giam')) {
+      diff = -diff;
+    }
+  } else {
+    // Sometimes they put the diff in a separate span without spaces, let's parse raw text
+    const rawText = $(td).text().trim().replace(/[\n\t\r]/g, ' ');
+    const splitText = rawText.split(/\s+/).filter(Boolean);
+    if (splitText.length > 0) current = splitText[0];
+    if (splitText.length > 1) {
+      diff = getNumber(splitText[1]) || 0;
+      const htmlContent = $(td).html()?.toLowerCase() || '';
+      if (htmlContent.includes('down') || htmlContent.includes('giam')) {
+        diff = -diff;
+      }
+    }
+  }
 
   return { current, diff };
 };
@@ -78,10 +98,12 @@ export default async function handler(req, res) {
       const $ = cheerio.load(domesticRes.value.data);
       let rowIndex = 0;
 
-      // Tìm bảng giá vàng cụ thể hơn nếu có thể
-      const table = $("table").filter((_, el) => $(el).text().includes("SJC") || $(el).text().includes("DOJI")).first();
+      // Tìm bảng giá vàng
+      let table = $("table").filter((_, el) => $(el).text().includes("SJC") || $(el).text().includes("DOJI")).first();
+      // Nếu không tìm thấy, lấy bảng đầu tiên
+      if (!table.length) table = $("table").first();
       
-      const rows = table.length ? table.find("tr") : $("table tr");
+      const rows = table.find("tr");
 
       rows.each((_, el) => {
         const cols = $(el).find("td");
@@ -103,17 +125,18 @@ export default async function handler(req, res) {
         };
 
         // ========= MATCH TEXT =========
-        if (name.includes("SJC")) {
+        // Chú ý: Chỉ gán nếu chưa được gán (đơn vị đầu tiên trùng khớp) để tránh bị ghi đè bởi "Phú quý SJC"
+        if (name.includes("SJC") && !name.includes("BTMC") && !name.includes("PHÚ") && responseData.sjc.buy === "---") {
           responseData.sjc = item;
-        } else if (name.includes("DOJI") && (name.includes("HN") || name.includes("HÀ NỘI"))) {
+        } else if (name.includes("DOJI") && (name.includes("HN") || name.includes("HÀ NỘI")) && responseData.dojiHn.buy === "---") {
           responseData.dojiHn = item;
-        } else if (name.includes("DOJI") && (name.includes("SG") || name.includes("HCM") || name.includes("HỒ CHÍ MINH") || name.includes("SÀI GÒN"))) {
+        } else if (name.includes("DOJI") && (name.includes("SG") || name.includes("HCM") || name.includes("HỒ CHÍ MINH") || name.includes("SÀI GÒN")) && responseData.dojiSg.buy === "---") {
           responseData.dojiSg = item;
-        } else if (name.includes("BTMH") || name.includes("BẢO TÍN") || name.includes("MẠNH HẢI")) {
+        } else if ((name.includes("BTMH") || name.includes("BẢO TÍN") || name.includes("MẠNH HẢI")) && responseData.btmh.buy === "---") {
           responseData.btmh = item;
         }
         
-        // Fallback by row index only if not matched by name yet
+        // Fallback: nếu vẫn trống sau vòng lặp, dùng rowIndex (nhưng chỉ khi text thực sự trống hoặc "---")
         if (rowIndex === 1 && responseData.sjc.buy === "---") responseData.sjc = item;
         if (rowIndex === 2 && responseData.dojiHn.buy === "---") responseData.dojiHn = item;
         if (rowIndex === 3 && responseData.dojiSg.buy === "---") responseData.dojiSg = item;
@@ -178,4 +201,5 @@ export default async function handler(req, res) {
     console.error("API Error:", error.message);
     return res.status(500).json({ error: "Internal Server Error", message: error.message });
   }
-}
+}
+
