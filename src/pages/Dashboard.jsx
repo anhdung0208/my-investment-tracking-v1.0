@@ -104,8 +104,8 @@ export default function Dashboard() {
       </div>
 
       {/* QUICK STATS / WORLD GOLD */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+        <div className="xl:col-span-4 2xl:col-span-3">
           <PriceCard
             title="Vàng Thế Giới (XAU/USD)"
             price={data?.world}
@@ -114,8 +114,8 @@ export default function Dashboard() {
           />
         </div>
         
-        <div className="lg:col-span-9">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="xl:col-span-8 2xl:col-span-9">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
             {goldList.map((item) => (
               <PriceCard
                 key={item.key}

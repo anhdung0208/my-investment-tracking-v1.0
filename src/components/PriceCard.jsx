@@ -4,23 +4,23 @@ import Skeleton from "./Skeleton";
 export default function PriceCard({ title, price, unit, loading }) {
   if (loading) {
     return (
-      <div className="bg-white border border-orange-100 p-4 rounded-[24px] shadow-sm">
-        <Skeleton className="w-20 h-3 mb-3" />
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+      <div className="bg-white border border-orange-100 p-5 rounded-[28px] shadow-sm">
+        <Skeleton className="w-24 h-3.5 mb-4" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Skeleton className="w-10 h-2 mb-2" />
-              <Skeleton className="w-16 h-6" />
+              <Skeleton className="w-12 h-2.5 mb-2.5" />
+              <Skeleton className="w-20 h-7" />
             </div>
-            <div className="border-l border-orange-50 pl-3">
-              <Skeleton className="w-10 h-2 mb-2" />
-              <Skeleton className="w-16 h-6" />
+            <div className="border-l border-orange-50 pl-4">
+              <Skeleton className="w-12 h-2.5 mb-2.5" />
+              <Skeleton className="w-20 h-7" />
             </div>
           </div>
         </div>
-        <div className="mt-4 pt-3 border-t border-zinc-50 flex justify-between">
-          <Skeleton className="w-16 h-2" />
-          <Skeleton className="w-10 h-3" />
+        <div className="mt-5 pt-4 border-t border-zinc-50 flex justify-between">
+          <Skeleton className="w-20 h-2.5" />
+          <Skeleton className="w-12 h-3.5" />
         </div>
       </div>
     );
@@ -49,7 +49,9 @@ export default function PriceCard({ title, price, unit, loading }) {
     return {
       val: displayValue,
       isUp,
-      sign: isUp ? "▲" : "▼",
+      sign: isUp ? "+" : "-",
+      color: isUp ? "text-emerald-600" : "text-rose-600",
+      bg: isUp ? "bg-emerald-50" : "bg-rose-50",
     };
   };
 
@@ -59,7 +61,7 @@ export default function PriceCard({ title, price, unit, loading }) {
   // trend dựa theo SELL cho nội địa, hoặc change cho thế giới
   let cardTrend = "neutral";
   if (isObjectPrice) {
-    cardTrend = sellChange?.isUp === true ? "up" : sellChange?.isUp === false ? "down" : "neutral";
+    cardTrend = (price.sellDiff > 0) ? "up" : (price.sellDiff < 0) ? "down" : "neutral";
   } else if (price && typeof price === 'object' && price.trend) {
     cardTrend = price.trend;
   }
@@ -80,90 +82,92 @@ export default function PriceCard({ title, price, unit, loading }) {
   };
 
   return (
-    <div className="group bg-white border border-orange-100 p-4 rounded-[24px] shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300">
-      <div className="flex justify-between items-start mb-3">
-        <p className="text-orange-600 text-[10px] font-black uppercase tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">
+    <div className="group bg-white border border-orange-100 p-5 rounded-[28px] shadow-sm hover:shadow-2xl hover:border-orange-200 transition-all duration-500 transform hover:-translate-y-1">
+      <div className="flex justify-between items-start mb-4">
+        <p className="text-orange-600 text-[11px] font-black uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">
           {title}
         </p>
         {cardTrend !== "neutral" && (
-          <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${cardTrend === 'up' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${cardTrend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+            {cardTrend === 'up' ? 'Tăng' : 'Giảm'}
+          </div>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {isObjectPrice ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {/* BUY */}
             <div className="flex flex-col">
-              <p className="text-zinc-400 text-[9px] font-bold uppercase mb-1">
+              <p className="text-zinc-400 text-[10px] font-bold uppercase mb-1.5 tracking-tight">
                 Mua vào
               </p>
 
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-xl font-bold text-zinc-800 tracking-tight">
+              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5 mb-1.5">
+                <span className="text-2xl font-black text-zinc-900 tracking-tighter">
                   {formatNumber(price.buy)}
                 </span>
                 {buyChange && (
-                  <span className={`text-[9px] font-black ${buyChange.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                    {buyChange.sign}
+                  <span className={`text-[11px] font-black ${buyChange.color}`}>
+                    {buyChange.sign}{buyChange.val}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] text-zinc-400 font-medium">Hôm qua:</span>
-                <span className="text-[9px] text-zinc-500 font-bold">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
+                <span className="text-[10px] text-zinc-500 font-bold">
                   {getOldPrice(price.buy, price.buyDiff)}
                 </span>
               </div>
             </div>
 
             {/* SELL */}
-            <div className="flex flex-col border-l border-orange-50 pl-3">
-              <p className="text-orange-500 text-[9px] font-bold uppercase mb-1">
+            <div className="flex flex-col border-l border-orange-50 pl-4">
+              <p className="text-orange-500 text-[10px] font-bold uppercase mb-1.5 tracking-tight">
                 Bán ra
               </p>
 
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-xl font-black text-orange-600 tracking-tight">
+              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5 mb-1.5">
+                <span className="text-2xl font-black text-orange-600 tracking-tighter">
                   {formatNumber(price.sell)}
                 </span>
                 {sellChange && (
-                  <span className={`text-[9px] font-black ${sellChange.isUp ? "text-emerald-500" : "text-rose-500"}`}>
-                    {sellChange.sign}
+                  <span className={`text-[11px] font-black ${sellChange.color}`}>
+                    {sellChange.sign}{sellChange.val}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] text-zinc-400 font-medium">Hôm qua:</span>
-                <span className="text-[9px] text-zinc-500 font-bold">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
+                <span className="text-[10px] text-zinc-500 font-bold">
                   {getOldPrice(price.sell, price.sellDiff)}
                 </span>
               </div>
             </div>
           </div>
         ) : (
-          // WORLD GOLD (hoặc giá trị đơn lẻ)
+          // WORLD GOLD
           <div className="flex flex-col">
-            <div className="flex items-baseline justify-between mb-1">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-zinc-900 tracking-tighter">
+            <div className="flex items-baseline flex-wrap gap-x-4 justify-between mb-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-zinc-900 tracking-tighter">
                   {typeof price === "object" ? formatNumber(price.price) : formatNumber(price)}
                 </span>
-                <span className="text-orange-500 font-bold text-[11px] uppercase">
+                <span className="text-orange-500 font-black text-[13px] uppercase">
                   {unit}
                 </span>
               </div>
               
               {price?.change && (
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${price.trend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                  {price.trend === 'up' ? '+' : ''}{price.change}
-                </span>
+                <div className={`px-2 py-1 rounded-xl text-[11px] font-black flex items-center gap-1 ${price.trend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                   {price.trend === 'up' ? '▲' : '▼'} {price.change}
+                </div>
               )}
             </div>
             
-            <p className="text-zinc-400 text-[9px] font-medium">
+            <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
               Thị trường quốc tế (Real-time)
             </p>
           </div>
@@ -171,19 +175,14 @@ export default function PriceCard({ title, price, unit, loading }) {
       </div>
 
       {/* FOOTER */}
-      <div className="mt-4 pt-3 border-t border-zinc-50 flex justify-between items-center text-[9px]">
+      <div className="mt-5 pt-4 border-t border-zinc-50 flex justify-between items-center text-[10px]">
         <span className="text-zinc-400 font-bold tracking-tight">
           Nguồn: {isObjectPrice ? "24h.com.vn" : "GoldAPI.io"}
         </span>
 
-        {cardTrend !== "neutral" && (
-          <span className={`font-black uppercase px-2 py-0.5 rounded-lg text-[8px] ${
-            cardTrend === "up" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-          }`}>
-            {cardTrend === "up" ? "Tăng" : "Giảm"}
-          </span>
-        )}
+        <div className={`w-2 h-2 rounded-full ${cardTrend === 'up' ? 'bg-emerald-500' : cardTrend === 'down' ? 'bg-rose-500' : 'bg-zinc-200'}`} />
       </div>
     </div>
   );
-}
+}
+
