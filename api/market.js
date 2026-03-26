@@ -66,18 +66,18 @@ export default async function handler(req, res) {
 
   try {
     const [worldRes, domesticRes] = await Promise.allSettled([
-      axios.get("https://www.goldapi.io/api/XAU/USD", {
+      fetch("https://www.goldapi.io/api/XAU/USD", {
         headers: { "x-access-token": apiKey },
-        timeout: 5000,
-      }),
-      axios.get("https://www.24h.com.vn/gia-vang-hom-nay-c425.html", {
+        signal: AbortSignal.timeout(5000),
+      }).then(res => res.json()),
+      
+      fetch("https://www.24h.com.vn/gia-vang-hom-nay-c425.html", {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-          Referer: "https://www.google.com/",
         },
-        timeout: 10000,
-      }),
+        signal: AbortSignal.timeout(10000),
+      }).then(res => res.text()),
     ]);
 
     const responseData = {
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
     // PARSE DOMESTIC (24H)
     // ======================
     if (domesticRes.status === "fulfilled") {
-      const $ = cheerio.load(domesticRes.value.data);
+      const $ = cheerio.load(domesticRes.value);
       let rowIndex = 0;
 
       // Tìm bảng giá vàng
@@ -125,7 +125,6 @@ export default async function handler(req, res) {
         };
 
         // ========= MATCH TEXT =========
-        // Chú ý: Chỉ gán nếu chưa được gán (đơn vị đầu tiên trùng khớp) để tránh bị ghi đè bởi "Phú quý SJC"
         if (name.includes("SJC") && !name.includes("BTMC") && !name.includes("PHÚ") && responseData.sjc.buy === "---") {
           responseData.sjc = item;
         } else if (name.includes("DOJI") && (name.includes("HN") || name.includes("HÀ NỘI")) && responseData.dojiHn.buy === "---") {
@@ -136,7 +135,7 @@ export default async function handler(req, res) {
           responseData.btmh = item;
         }
         
-        // Fallback: nếu vẫn trống sau vòng lặp, dùng rowIndex (nhưng chỉ khi text thực sự trống hoặc "---")
+        // Fallback: nếu vẫn trống sau vòng lặp, dùng rowIndex
         if (rowIndex === 1 && responseData.sjc.buy === "---") responseData.sjc = item;
         if (rowIndex === 2 && responseData.dojiHn.buy === "---") responseData.dojiHn = item;
         if (rowIndex === 3 && responseData.dojiSg.buy === "---") responseData.dojiSg = item;
@@ -173,7 +172,6 @@ export default async function handler(req, res) {
       if (extractedChartData.length > 0) {
         responseData.chartData = extractedChartData.slice(-30);
       } else {
-        // Mock data logic remains as fallback
         const baseSell = getNumber(responseData.sjc.sell);
         const base = baseSell || 166000;
         responseData.chartData = Array.from({ length: 30 }, (_, i) => ({
@@ -181,19 +179,24 @@ export default async function handler(req, res) {
           price: base - (29 - i) * 200 + (Math.random() * 500),
         }));
       }
+    } else {
+      // Bị chặn (Cloudflare) hoặc timeout
+      responseData._debug_domestic = domesticRes.reason?.message || "Rejected";
     }
 
     // ======================
     // WORLD GOLD
     // ======================
     if (worldRes.status === "fulfilled") {
-      const d = worldRes.value.data;
+      const d = worldRes.value;
       responseData.world = {
         price: d?.price || 0,
         trend: d?.chp > 0 ? "up" : d?.chp < 0 ? "down" : "neutral",
         change: d?.chp ? `${d.chp.toFixed(2)}%` : "0%",
         changeValue: d?.ch || 0
       };
+    } else {
+      responseData._debug_world = worldRes.reason?.message || "Rejected";
     }
 
     return res.status(200).json(responseData);

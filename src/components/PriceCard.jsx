@@ -26,7 +26,7 @@ export default function PriceCard({ title, price, unit, loading }) {
     );
   }
 
-  const isObjectPrice = typeof price === "object" && price !== null && !Array.isArray(price);
+  const isObjectPrice = typeof price === "object" && price !== null && !Array.isArray(price) && price.buy !== undefined;
 
   // ========================
   // FORMAT NUMBER
@@ -62,7 +62,7 @@ export default function PriceCard({ title, price, unit, loading }) {
   let cardTrend = "neutral";
   if (isObjectPrice) {
     cardTrend = (price.sellDiff > 0) ? "up" : (price.sellDiff < 0) ? "down" : "neutral";
-  } else if (price && typeof price === 'object' && price.trend) {
+  } else if (typeof price === 'object' && price !== null && price.trend) {
     cardTrend = price.trend;
   }
 
