@@ -102,23 +102,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* QUICK STATS / WORLD GOLD */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-
-
-        <div className="xl:col-span-8 2xl:col-span-9">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
-            {goldList.map((item) => (
-              <PriceCard
-                key={item.key}
-                title={item.title}
-                price={data?.[item.key]}
-                unit="đ"
-                loading={isLoading}
-              />
-            ))}
-          </div>
-        </div>
+      {/* QUICK STATS / CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+        {goldList.map((item) => (
+          <PriceCard
+            key={item.key}
+            title={item.title}
+            price={data?.[item.key]}
+            unit="đ"
+            loading={isLoading}
+          />
+        ))}
       </div>
 
       {/* CHART SECTION */}

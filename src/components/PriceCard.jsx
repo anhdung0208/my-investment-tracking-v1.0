@@ -94,54 +94,54 @@ export default function PriceCard({ title, price, unit, loading }) {
         )}
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {isObjectPrice ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex space-x-3 sm:space-x-4">
             {/* BUY */}
-            <div className="flex flex-col">
-              <p className="text-zinc-400 text-[10px] font-bold uppercase mb-1.5 tracking-tight">
+            <div className="flex-1 flex flex-col">
+              <p className="text-zinc-400 text-[9px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-1.5 tracking-tight">
                 Mua vào
               </p>
 
-              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5 mb-1.5">
-                <span className="text-2xl font-black text-zinc-900 tracking-tighter">
+              <div className="flex items-baseline flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 mb-1 sm:mb-1.5 min-w-0">
+                <span className="text-lg sm:text-xl xl:text-2xl font-black text-zinc-900 tracking-tighter truncate">
                   {formatNumber(price.buy)}
                 </span>
                 {buyChange && (
-                  <span className={`text-[11px] font-black ${buyChange.color}`}>
+                  <span className={`text-[9px] sm:text-[11px] font-black whitespace-nowrap ${buyChange.color}`}>
                     {buyChange.sign}{buyChange.val}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
-                <span className="text-[10px] text-zinc-500 font-bold">
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
+                <span className="text-[9px] sm:text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
+                <span className="text-[9px] sm:text-[10px] text-zinc-500 font-bold truncate">
                   {getOldPrice(price.buy, price.buyDiff)}
                 </span>
               </div>
             </div>
 
             {/* SELL */}
-            <div className="flex flex-col border-l border-orange-50 pl-4">
-              <p className="text-orange-500 text-[10px] font-bold uppercase mb-1.5 tracking-tight">
+            <div className="flex-1 flex flex-col border-l border-orange-50 pl-3 sm:pl-4">
+              <p className="text-orange-500 text-[9px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-1.5 tracking-tight">
                 Bán ra
               </p>
 
-              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5 mb-1.5">
-                <span className="text-2xl font-black text-orange-600 tracking-tighter">
+              <div className="flex items-baseline flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 mb-1 sm:mb-1.5 min-w-0">
+                <span className="text-lg sm:text-xl xl:text-2xl font-black text-orange-600 tracking-tighter truncate">
                   {formatNumber(price.sell)}
                 </span>
                 {sellChange && (
-                  <span className={`text-[11px] font-black ${sellChange.color}`}>
+                  <span className={`text-[9px] sm:text-[11px] font-black whitespace-nowrap ${sellChange.color}`}>
                     {sellChange.sign}{sellChange.val}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
-                <span className="text-[10px] text-zinc-500 font-bold">
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
+                <span className="text-[9px] sm:text-[10px] text-zinc-400 font-medium">Hôm qua:</span>
+                <span className="text-[9px] sm:text-[10px] text-zinc-500 font-bold truncate">
                   {getOldPrice(price.sell, price.sellDiff)}
                 </span>
               </div>
