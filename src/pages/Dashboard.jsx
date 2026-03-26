@@ -86,16 +86,15 @@ export default function Dashboard() {
             <ShieldCheck className="w-3 h-3" />
             KẾT NỐI AN TOÀN
           </div>
-          
+
           <button
             onClick={handleRefresh}
             disabled={isValidating}
             className={`group flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-[11px] shadow-sm transition-all active:scale-95
-            ${
-              isValidating
+            ${isValidating
                 ? "bg-zinc-100 text-zinc-400 cursor-not-allowed"
                 : "bg-orange-50 text-orange-600 hover:bg-orange-100 ring-1 ring-orange-200/50"
-            }`}
+              }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
             {isValidating ? "ĐANG CẬP NHẬT..." : "LÀM MỚI DỮ LIỆU"}
@@ -105,15 +104,8 @@ export default function Dashboard() {
 
       {/* QUICK STATS / WORLD GOLD */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-        <div className="xl:col-span-4 2xl:col-span-3">
-          <PriceCard
-            title="Vàng Thế Giới (XAU/USD)"
-            price={data?.world}
-            unit="USD/OZ"
-            loading={isLoading}
-          />
-        </div>
-        
+
+
         <div className="xl:col-span-8 2xl:col-span-9">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
             {goldList.map((item) => (
@@ -132,7 +124,7 @@ export default function Dashboard() {
       {/* CHART SECTION */}
       <div className="bg-white p-8 rounded-[40px] border border-orange-100 shadow-xl shadow-orange-900/5 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full -mr-32 -mt-32 opacity-50 blur-3xl pointer-events-none" />
-        
+
         <div className="flex justify-between items-center mb-8 relative z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-100 rounded-xl text-orange-600">
